@@ -57,6 +57,15 @@
 		return String(value || '').toLowerCase();
 	}
 
+	// Helper to read multiple possible field names from an item and return the first defined.
+	// Use this to handle different JSON column names (e.g., 'Year' vs 'year').
+	function getField(item, ...names) {
+		for (const n of names) {
+			if (item[n] != null) return item[n];
+		}
+		return '';
+	}
+
 	// ----- Search logic (case-insensitive) -----
 	// This function decides whether a single resource item matches the
 	// current search query. It is intentionally simple: it concatenates the
@@ -66,11 +75,14 @@
 		if (!qLower) return true; // empty query matches everything
 
 		// List of fields to search. Edit these to add/remove searchable fields.
+		// Gather field values from the item, supporting multiple possible JSON keys.
 		const fieldsToSearch = [
-			item.event_name,
-			item.tournament,
-			item.year,
-			item.source_type
+			getField(item, 'event_name', 'Tournament Full Name', 'tournament'),
+			getField(item, 'Abbr.', 'abbreviation'),
+			getField(item, 'Year', 'year'),
+			getField(item, 'Division', 'division'),
+			getField(item, 'Level', 'level'),
+			getField(item, 'Notes', 'notes')
 		];
 
 		// Join fields and check if the query substring appears.
@@ -85,6 +97,8 @@
 			const res = await fetch(DATA_URL);
 			if (!res.ok) throw new Error('Network response was not ok: ' + res.status);
 			resources = await res.json();
+			// After loading data, populate dropdowns with unique values
+			populateFilters(resources);
 			// Render results after loading
 			render();
 		} catch (err) {
@@ -92,6 +106,32 @@
 			const root = document.getElementById(ROOT_ID);
 			if (root) root.innerHTML = '<pre class="error">Error loading data: ' + err.message + '</pre>';
 			console.error('Failed to load resources.json', err);
+		}
+
+		// Populate filter dropdowns with unique, sorted options from the data.
+		function populateFilters(data) {
+			// Helper: build a sorted unique array of values for a given key
+			function uniqueValues(key) {
+				const set = new Set();
+				data.forEach(item => {
+					const v = item[key];
+					if (v != null && String(v).trim() !== '') set.add(String(v));
+				});
+				return Array.from(set).sort();
+			}
+
+			// Fill a select element with an 'All' option + values
+			function fillSelect(selectEl, values) {
+				selectEl.innerHTML = ''; // clear
+				// 'All' option (empty value)
+				selectEl.appendChild(create('option', {value: ''}, 'All'));
+				values.forEach(v => selectEl.appendChild(create('option', {value: v}, v)));
+			}
+
+			// Year options (sorted) - use the exact JSON keys from your CSV
+			fillSelect(yearSelect, uniqueValues('Year'));
+			// Division options (use 'Division' as in the CSV)
+			fillSelect(divisionSelect, uniqueValues('Division'));
 		}
 	}
 
@@ -104,15 +144,25 @@
 		return;
 	}
 
-	// Controls container (search box, view toggle, compact checkbox)
+	// Controls container (search box, dropdown filters, view toggle, compact checkbox)
 	const controls = create('div', {class: 'controls'});
 
-	// Search input: user types here to filter resources
+	// Search input: user types here to filter resources (general text search)
 	const input = create('input', {
 		type: 'search',
-		placeholder: 'Search (event, tournament, year, source)...',
+		placeholder: 'Search (any field)...',
 		'aria-label': 'Search resources'
 	});
+
+	// Dropdown filters: we'll create selects for year and division.
+	// These are populated after the data is loaded.
+	const yearSelect = create('select', {class: 'filter', 'data-filter': 'year'});
+	const divisionSelect = create('select', {class: 'filter', 'data-filter': 'division'});
+
+	// Put a small label before selects for clarity (screen-reader friendly)
+	const yearLabel = create('label', {}, 'Year:');
+	// (source dropdown removed because most links are drives)
+	const divisionLabel = create('label', {}, 'Division:');
 
 	// Toggle button to switch between grid and list
 	const toggleBtn = create('button', {type: 'button', class: 'view-toggle'}, 'Switch to list');
@@ -125,7 +175,16 @@
 	const resultsContainer = create('div', {class: 'results grid'});
 
 	// Append controls and results to the root element
+	// Append controls: search box first
 	controls.appendChild(input);
+
+	// Then the dropdown filters (will contain an "All" option + data-driven options)
+	controls.appendChild(yearLabel);
+	controls.appendChild(yearSelect);
+	controls.appendChild(divisionLabel);
+	controls.appendChild(divisionSelect);
+
+	// View toggle and compact checkbox
 	controls.appendChild(toggleBtn);
 	controls.appendChild(create('span', {class: 'spacer'}));
 	controls.appendChild(compactCheckbox);
@@ -139,6 +198,12 @@
 	input.addEventListener('input', () => {
 		query = input.value.trim();
 		render();
+	});
+
+	// Dropdowns: change events narrow results by the selected value.
+	// We use 'All' (empty value) to indicate no filter for that field.
+	[yearSelect, divisionSelect].forEach(select => {
+		select.addEventListener('change', () => render());
 	});
 
 	// Toggle between grid and list views
@@ -159,8 +224,24 @@
 	// then maps each resource to a DOM card / row.
 	function render() {
 		const qLower = normalize(query);
-		// Filter step (case-insensitive)
-		const matched = resources.filter(item => matches(item, qLower));
+
+		// Read selected dropdown values (empty string means 'All')
+		const yearFilter = yearSelect.value || '';
+		const typeFilter = '';
+		const divisionFilter = divisionSelect.value || '';
+
+		// Filter step (case-insensitive) + apply dropdown filters
+		const matched = resources.filter(item => {
+			// First check dropdown filters: if a filter has a selected value,
+			// require the item's corresponding field to equal that value.
+			const itemYear = String(getField(item, 'Year', 'year') || '');
+			const itemDivision = String(getField(item, 'Division', 'division') || '');
+			if (yearFilter && itemYear !== yearFilter) return false;
+			if (divisionFilter && itemDivision !== divisionFilter) return false;
+
+			// Then apply the general text search
+			return matches(item, qLower);
+		});
 
 		// Clear previous results
 		resultsContainer.innerHTML = '';
@@ -177,18 +258,24 @@
 			const card = create('div', {class: 'card'});
 
 			// Main title: tournament name (fall back to event_name)
-			const titleText = item.tournament || item.event_name || '(no title)';
-			// Make the title itself an anchor so clicking it opens the resource in a new tab.
-			const linkHref = item.link_url || '#';
+			// Title prefers 'Tournament Full Name', then 'Abbr.', then previous keys
+			const titleText = getField(item, 'Tournament Full Name', 'tournament', 'event_name', 'Abbr.', 'abbreviation') || '(no title)';
+			// Link field in the CSV is 'Link'
+			const linkHref = getField(item, 'Link', 'link_url') || '#';
 			const title = create('a', {class: 'title', href: linkHref, target: '_blank', rel: 'noopener noreferrer'}, titleText);
 			card.appendChild(title);
 
 			// Meta: year, event_name (if any), source_type
 			if (!compact) {
 				const metaParts = [];
-				if (item.year) metaParts.push(item.year);
-				if (item.event_name) metaParts.push(item.event_name);
-				if (item.source_type) metaParts.push(item.source_type);
+				const yr = getField(item, 'Year', 'year');
+				const lvl = getField(item, 'Level', 'level');
+				const div = getField(item, 'Division', 'division');
+				const notes = getField(item, 'Notes', 'notes');
+				if (yr) metaParts.push(yr);
+				if (div) metaParts.push(div);
+				if (lvl) metaParts.push(lvl);
+				if (notes) metaParts.push(notes);
 				const meta = create('div', {class: 'meta'}, metaParts.join(' • '));
 				card.appendChild(meta);
 			}
