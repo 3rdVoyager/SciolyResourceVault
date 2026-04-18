@@ -1,9 +1,9 @@
 
 /* Minimal styles for the Scioly Resource Vault app */
 body {
-	font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-	margin: 12px;
-	color: #111;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    margin: 12px;
+    color: #111;
 }
 
 #app { max-width: 980px; margin: 0 auto; }
@@ -13,9 +13,32 @@ body {
 .controls button { padding:8px 10px; border-radius:6px; cursor:pointer; }
 .controls .spacer { flex:0 0 8px; }
 
-.results.list .card { display:flex; align-items:center; gap:12px; padding:10px; border-bottom:1px solid #eee; }
+/* Theme variables - default (light) */
+:root {
+	--bg: #ffffff;
+	--text: #111111;
+	--muted: #555555;
+	--card-bg: #ffffff;
+	--border: #e6e6e6;
+	--link: #0366d6;
+}
+
+/* Dark theme overrides */
+body.dark {
+	--bg: #0b0b0d;
+	--text: #e6eef6;
+	--muted: #bfc9d6;
+	--card-bg: #0f1720;
+	--border: #1f2a36;
+	--link: #58a6ff;
+}
+
+body { background: var(--bg); color: var(--text); }
+
+.results.list .card { display:flex; align-items:center; gap:12px; padding:10px; border-bottom:1px solid var(--border); margin-bottom:8px; }
+.results.list .card:last-child { margin-bottom:0; border-bottom:1px solid var(--border); }
 .results.grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:12px; }
-.card { background:#fff; border:1px solid #e6e6e6; padding:12px; border-radius:8px; box-shadow:0 1px 0 rgba(0,0,0,0.02); }
+.card { background:var(--card-bg); border:1px solid var(--border); padding:12px; border-radius:8px; box-shadow:0 1px 0 rgba(0,0,0,0.02); }
 .card .title { font-weight:600; margin-bottom:6px; /* title is an <a> now */ }
 
 /* Make title links look like normal text by default, but blue on hover */
@@ -24,13 +47,16 @@ body {
 	text-decoration: none;    /* no underline by default */
 }
 .card .title:hover {
-	color: #0366d6;           /* blue color on hover */
-	text-decoration: underline;
+    color: var(--link);           /* blue color on hover */
+    text-decoration: underline;
 }
-.card .meta { color:#555; font-size:0.9rem; margin-bottom:8px; }
-.card .link { display:inline-block; padding:6px 8px; background:#0366d6; color:#fff; text-decoration:none; border-radius:6px; }
+.card .meta { color:var(--muted); font-size:0.9rem; margin-bottom:8px; }
+.card .link { display:inline-block; padding:6px 8px; background:var(--link); color:#fff; text-decoration:none; border-radius:6px; }
 
 .results.compact .meta { display:none; }
 .empty { padding:16px; color:#666; }
 
 .error { color:#900; background:#fee; padding:10px; border-radius:6px; }
+
+/* In dark mode remove the faint white highlight under cards */
+body.dark .card { box-shadow: none; }

@@ -167,9 +167,8 @@
 	// Toggle button to switch between grid and list
 	const toggleBtn = create('button', {type: 'button', class: 'view-toggle'}, 'Switch to list');
 
-	// Compact view checkbox - when checked we show less metadata
-	const compactCheckbox = create('input', {type: 'checkbox', id: 'compactCheckbox'});
-	const compactLabel = create('label', {for: 'compactCheckbox'}, 'Compact');
+	// Compact view toggle button - toggles showing less metadata
+	const compactBtn = create('button', {type: 'button', class: 'compact-toggle'}, 'Compact');
 
 	// Results container - we toggle class 'grid' / 'list' on this element
 	const resultsContainer = create('div', {class: 'results grid'});
@@ -184,11 +183,10 @@
 	controls.appendChild(divisionLabel);
 	controls.appendChild(divisionSelect);
 
-	// View toggle and compact checkbox
+	// View toggle and compact button
 	controls.appendChild(toggleBtn);
 	controls.appendChild(create('span', {class: 'spacer'}));
-	controls.appendChild(compactCheckbox);
-	controls.appendChild(compactLabel);
+	controls.appendChild(compactBtn);
 	root.appendChild(controls);
 	root.appendChild(resultsContainer);
 
@@ -213,10 +211,42 @@
 		toggleBtn.textContent = viewMode === 'grid' ? 'Switch to list' : 'Switch to grid';
 	});
 
+	// Theme toggle: create a button and wire localStorage + prefers-color-scheme
+	const themeBtn = create('button', {type: 'button', class: 'theme-toggle'}, 'Toggle theme');
+	// Insert theme button into controls (before spacer)
+	controls.insertBefore(themeBtn, controls.querySelector('.spacer'));
+
+	// Initialize theme from localStorage or system preference
+	function applyTheme(theme) {
+		if (theme === 'dark') document.body.classList.add('dark');
+		else document.body.classList.remove('dark');
+		// update button text
+		themeBtn.textContent = theme === 'dark' ? 'Light mode' : 'Dark mode';
+		try { localStorage.setItem('scioly_theme', theme); } catch (e) { /* ignore */ }
+	}
+
+	(function initTheme() {
+		let stored = null;
+		try { stored = localStorage.getItem('scioly_theme'); } catch (e) { /* ignore */ }
+		if (stored) applyTheme(stored);
+		else {
+			const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+			applyTheme(prefersDark ? 'dark' : 'light');
+		}
+	})();
+
+	themeBtn.addEventListener('click', () => {
+		const isDark = document.body.classList.contains('dark');
+		applyTheme(isDark ? 'light' : 'dark');
+	});
+
 	// Compact checkbox toggles a class on resultsContainer to hide/show metadata
-	compactCheckbox.addEventListener('change', () => {
-		compact = compactCheckbox.checked;
+	compactBtn.addEventListener('click', () => {
+		compact = !compact;
 		resultsContainer.classList.toggle('compact', compact);
+		// Update button text: when currently compact, show 'Detailed' to switch to detailed view;
+		// when currently detailed, show 'Compact' to switch to compact view.
+		compactBtn.textContent = compact ? 'Detailed' : 'Compact';
 	});
 
 	// ----- Render function -----
