@@ -60,3 +60,41 @@ body { background: var(--bg); color: var(--text); }
 
 /* In dark mode remove the faint white highlight under cards */
 body.dark .card { box-shadow: none; }
+
+/* Footer styles */
+.site-footer, .site-footer-compact { margin-top:24px; padding:14px; border-top:1px solid var(--border); color:var(--muted); background:transparent; font-size:0.95rem; border-radius:6px; }
+.site-footer .container { max-width:980px; margin:0 auto; }
+.site-footer p { margin:6px 0; line-height:1.35; }
+.site-footer strong { color:var(--text); }
+.site-footer-compact { text-align:center; padding:10px; font-size:0.9rem; }
+
+
+/* Additional styles for the footer based on the new content and design */
+.site-footer {
+    background-color: #1a1a1a;
+    color: #ffffff;
+    padding: 2rem 1rem;
+    margin-top: 4rem;
+    text-align: left;
+    font-family: sans-serif;
+}
+
+.footer-content p {
+    margin-bottom: 1rem;
+    opacity: 0.8;
+}
+
+.contact-btn {
+    background-color: #3b82f6; /* A clean blue color */
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background 0.3s ease;
+}
+
+.contact-btn:hover {
+    background-color: #2563eb;
+    text-decoration: underline;
+}
