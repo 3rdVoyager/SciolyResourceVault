@@ -212,9 +212,23 @@
 	});
 
 	// Theme toggle: create a button and wire localStorage + prefers-color-scheme
-	const themeBtn = create('button', {type: 'button', class: 'theme-toggle'}, 'Toggle theme');
-	// Append theme button after the spacer so compact and view-toggle positions are swapped
-	controls.appendChild(themeBtn);
+	const themeBtn = create('button', {type: 'button', class: 'theme-toggle control-btn'}, 'Toggle theme');
+
+	// Settings button + panel: place at the very top of the page (in the header)
+	const settingsBtn = create('button', {type: 'button', class: 'control-btn settings-btn', 'aria-expanded': 'false', 'aria-controls': 'settings-panel'}, 'Settings');
+	const settingsPanel = create('div', {id: 'settings-panel', class: 'settings-panel', 'aria-hidden': 'true'}, themeBtn);
+	// Append settings button and panel into the page header (top-right)
+	const pageHeader = document.querySelector('.site-header');
+	if (pageHeader) {
+		// put the settings button to the far right
+		settingsBtn.style.marginLeft = 'auto';
+		pageHeader.appendChild(settingsBtn);
+		pageHeader.appendChild(settingsPanel);
+	} else {
+		// fallback: append to controls if header not found
+		controls.appendChild(settingsBtn);
+		controls.appendChild(settingsPanel);
+	}
 
 	// Initialize theme from localStorage or system preference
 	function applyTheme(theme) {
@@ -238,6 +252,29 @@
 	themeBtn.addEventListener('click', () => {
 		const isDark = document.body.classList.contains('dark');
 		applyTheme(isDark ? 'light' : 'dark');
+		// keep the settings panel open so users can toggle multiple options
+	});
+
+	// Settings button behavior: toggle panel visibility
+	settingsBtn.addEventListener('click', (e) => {
+		const expanded = settingsBtn.getAttribute('aria-expanded') === 'true';
+		settingsBtn.setAttribute('aria-expanded', String(!expanded));
+		settingsPanel.setAttribute('aria-hidden', String(expanded));
+	});
+
+	// Close the settings panel when clicking outside or pressing Escape
+	document.addEventListener('click', (e) => {
+		const target = e.target;
+		if (!settingsPanel.contains(target) && !settingsBtn.contains(target)) {
+			settingsBtn.setAttribute('aria-expanded', 'false');
+			settingsPanel.setAttribute('aria-hidden', 'true');
+		}
+	});
+	document.addEventListener('keydown', (e) => {
+		if (e.key === 'Escape') {
+			settingsBtn.setAttribute('aria-expanded', 'false');
+			settingsPanel.setAttribute('aria-hidden', 'true');
+		}
 	});
 
 	// Compact checkbox toggles a class on resultsContainer to hide/show metadata

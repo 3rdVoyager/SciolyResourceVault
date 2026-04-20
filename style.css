@@ -93,7 +93,8 @@ body.dark .card { box-shadow: none; }
 }
 
 /* Header / brand */
-.site-header { display:flex; align-items:center; gap:12px; margin-bottom:16px; width:100%; padding:0 12px; box-sizing:border-box; }
+.site-header { display:flex; align-items:center; gap:12px; margin-bottom:16px; width:100%; padding:0 12px; box-sizing:border-box; position:relative; }
+.site-header .settings-btn { margin-left: auto; }
 .home-link { display:inline-flex; align-items:center; gap:10px; text-decoration:none; color:var(--text); }
 .logo { display:inline-grid; place-items:center; width:40px; height:40px; background:var(--link); color:#fff; border-radius:8px; font-weight:700; }
 .site-title { font-size:1.05rem; font-weight:600; }
@@ -141,6 +142,23 @@ body.dark .card { box-shadow: none; }
     box-shadow:0 1px 0 rgba(0,0,0,0.04);
     transition:background 120ms ease, box-shadow 160ms ease, transform 60ms ease;
 }
+
+/* Settings panel (dropdown) */
+.settings-btn { background: transparent; }
+.settings-panel { position:absolute; top:calc(100% + 8px); right:12px; margin-top:0; min-width:200px; background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:10px; box-shadow:0 8px 24px rgba(2,6,23,0.12); z-index:200; display:none; }
+.settings-panel[aria-hidden="false"] { display:block; }
+.settings-panel .theme-toggle { margin:0; }
+
+/* Restyle settings toggle: show gear icon and caret, with clear hover/focus states */
+.settings-btn { display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:8px; background:transparent; border:1px solid var(--border); color:var(--text); cursor:pointer; font-weight:600; }
+.settings-btn::before { content: '⚙'; display:inline-block; line-height:1; font-size:1.05rem; }
+.settings-btn::after { content: '▾'; display:inline-block; margin-left:4px; font-size:0.85rem; transition: transform 160ms ease; color:var(--muted); }
+.settings-btn[aria-expanded="true"]::after { transform: rotate(180deg); color:var(--text); }
+.settings-btn:hover { background: rgba(3,102,214,0.04); border-color: rgba(3,102,214,0.12); }
+.settings-btn:focus { outline:3px solid rgba(3,102,214,0.14); outline-offset:2px; }
+
+/* Slight visual lift for the open panel */
+.settings-panel[aria-hidden="false"] { box-shadow:0 12px 36px rgba(2,6,23,0.16); }
 
 /* Primary style for highlight buttons (e.g., contact/report) */
 .controls .control-btn.primary, .contact-btn {
