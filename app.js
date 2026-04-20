@@ -183,10 +183,10 @@
 	controls.appendChild(divisionLabel);
 	controls.appendChild(divisionSelect);
 
-	// View toggle and compact button
+	// View toggle and compact button (compact button placed before spacer)
 	controls.appendChild(toggleBtn);
-	controls.appendChild(create('span', {class: 'spacer'}));
 	controls.appendChild(compactBtn);
+	controls.appendChild(create('span', {class: 'spacer'}));
 	root.appendChild(controls);
 	root.appendChild(resultsContainer);
 
@@ -213,8 +213,8 @@
 
 	// Theme toggle: create a button and wire localStorage + prefers-color-scheme
 	const themeBtn = create('button', {type: 'button', class: 'theme-toggle'}, 'Toggle theme');
-	// Insert theme button into controls (before spacer)
-	controls.insertBefore(themeBtn, controls.querySelector('.spacer'));
+	// Append theme button after the spacer so compact and view-toggle positions are swapped
+	controls.appendChild(themeBtn);
 
 	// Initialize theme from localStorage or system preference
 	function applyTheme(theme) {

@@ -8,9 +8,19 @@ body {
 
 #app { width: 100%; box-sizing: border-box; }
 
-.controls { display:flex; gap:8px; align-items:center; margin-bottom:12px; width:100%; padding:0 12px; box-sizing:border-box; }
-.controls input[type="search"] { flex:1; padding:8px; border:1px solid #ccc; border-radius:6px; }
-.controls button { padding:8px 10px; border-radius:6px; cursor:pointer; }
+.controls { display:flex; gap:10px; align-items:center; margin-bottom:14px; width:100%; padding:6px 12px; box-sizing:border-box; flex-wrap:wrap; }
+.controls input[type="search"] { flex:1 1 320px; min-width:160px; padding:10px 12px; border:1px solid var(--border); border-radius:8px; background:var(--card-bg); color:var(--text); box-shadow:none; }
+.controls select.filter { padding:9px 10px; border:1px solid var(--border); border-radius:8px; background:var(--card-bg); color:var(--text); }
+.controls .control-btn { padding:9px 10px; border-radius:8px; border:1px solid transparent; background:transparent; color:var(--text); cursor:pointer; font-weight:600; }
+.controls .control-btn:hover { background: rgba(3,102,214,0.06); border-color: rgba(3,102,214,0.12); }
+.controls .control-btn:active { transform:translateY(0.5px); }
+.controls .spacer { flex:0 0 8px; }
+
+/* Make specific toggles slightly highlighted */
+.view-toggle, .theme-toggle, .compact-toggle { display:inline-flex; align-items:center; gap:8px; }
+
+/* Focus styles for accessibility */
+.controls input[type="search"]:focus, .controls select.filter:focus, .controls .control-btn:focus { outline:3px solid rgba(3,102,214,0.14); outline-offset:2px; }
 .controls .spacer { flex:0 0 8px; }
 
 /* Theme variables - default (light) */
@@ -115,3 +125,45 @@ body.dark .card { box-shadow: none; }
     background-color: #2563eb;
     text-decoration: underline;
 }
+
+/* Button styles (controls + prominent contact button) */
+.controls .control-btn, .view-toggle, .theme-toggle, .compact-toggle {
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:9px 12px;
+    border-radius:8px;
+    border:1px solid transparent;
+    background:var(--card-bg);
+    color:var(--text);
+    cursor:pointer;
+    font-weight:600;
+    box-shadow:0 1px 0 rgba(0,0,0,0.04);
+    transition:background 120ms ease, box-shadow 160ms ease, transform 60ms ease;
+}
+
+/* Primary style for highlight buttons (e.g., contact/report) */
+.controls .control-btn.primary, .contact-btn {
+    background:var(--link);
+    color:#fff;
+    border-color:transparent;
+}
+
+.controls .control-btn:hover, .view-toggle:hover, .theme-toggle:hover, .compact-toggle:hover {
+    background: rgba(3,102,214,0.06);
+}
+.controls .control-btn.primary:hover, .contact-btn:hover { box-shadow:0 8px 20px rgba(3,102,214,0.12); }
+.controls .control-btn:active { transform:translateY(0.5px); }
+
+/* Accessible focus ring */
+.controls .control-btn:focus, .view-toggle:focus, .theme-toggle:focus, .compact-toggle:focus, .contact-btn:focus {
+    outline:3px solid rgba(3,102,214,0.14);
+    outline-offset:2px;
+}
+
+/* Smaller compact buttons for tight layouts */
+.controls .small { padding:6px 8px; font-weight:600; }
+
+/* Dark-mode tweaks: keep contrast */
+body.dark .controls .control-btn { background: #0f1720; color:var(--text); border-color: rgba(255,255,255,0.03); }
+body.dark .controls .control-btn.primary, body.dark .contact-btn { background:var(--link); color:#fff; }
