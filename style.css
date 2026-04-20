@@ -6,9 +6,9 @@ body {
     color: #111;
 }
 
-#app { max-width: 980px; margin: 0 auto; }
+#app { width: 100%; box-sizing: border-box; }
 
-.controls { display:flex; gap:8px; align-items:center; margin-bottom:12px; }
+.controls { display:flex; gap:8px; align-items:center; margin-bottom:12px; width:100%; padding:0 12px; box-sizing:border-box; }
 .controls input[type="search"] { flex:1; padding:8px; border:1px solid #ccc; border-radius:6px; }
 .controls button { padding:8px 10px; border-radius:6px; cursor:pointer; }
 .controls .spacer { flex:0 0 8px; }
@@ -38,6 +38,9 @@ body { background: var(--bg); color: var(--text); }
 .results.list .card { display:flex; align-items:center; gap:12px; padding:10px; border-bottom:1px solid var(--border); margin-bottom:8px; }
 .results.list .card:last-child { margin-bottom:0; border-bottom:1px solid var(--border); }
 .results.grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:12px; }
+
+/* Make results take full width with a small horizontal gutter */
+.results { width: 100%; margin: 0; box-sizing: border-box; padding: 0 12px; }
 .card { background:var(--card-bg); border:1px solid var(--border); padding:12px; border-radius:8px; box-shadow:0 1px 0 rgba(0,0,0,0.02); }
 .card .title { font-weight:600; margin-bottom:6px; /* title is an <a> now */ }
 
@@ -62,8 +65,8 @@ body { background: var(--bg); color: var(--text); }
 body.dark .card { box-shadow: none; }
 
 /* Footer styles */
-.site-footer, .site-footer-compact { margin-top:24px; padding:14px; border-top:1px solid var(--border); color:var(--muted); background:transparent; font-size:0.95rem; border-radius:6px; }
-.site-footer .container { max-width:980px; margin:0 auto; }
+.site-footer, .site-footer-compact { margin-top:24px; padding:14px 0; border-top:1px solid var(--border); color:var(--muted); background:transparent; font-size:0.95rem; border-radius:6px; width:100%; box-sizing:border-box; }
+.site-footer .container { width:100%; margin:0; padding:0 12px; box-sizing:border-box; }
 .site-footer p { margin:6px 0; line-height:1.35; }
 .site-footer strong { color:var(--text); }
 .site-footer-compact { text-align:center; padding:10px; font-size:0.9rem; }
@@ -71,12 +74,26 @@ body.dark .card { box-shadow: none; }
 
 /* Additional styles for the footer based on the new content and design */
 .site-footer {
-    background-color: #1a1a1a;
+    background-color: #0b0b0d;
     color: #ffffff;
     padding: 2rem 1rem;
     margin-top: 4rem;
     text-align: left;
     font-family: sans-serif;
+}
+
+/* Header / brand */
+.site-header { display:flex; align-items:center; gap:12px; margin-bottom:16px; width:100%; padding:0 12px; box-sizing:border-box; }
+.home-link { display:inline-flex; align-items:center; gap:10px; text-decoration:none; color:var(--text); }
+.logo { display:inline-grid; place-items:center; width:40px; height:40px; background:var(--link); color:#fff; border-radius:8px; font-weight:700; }
+.site-title { font-size:1.05rem; font-weight:600; }
+
+/* Make the logo have a subtle border that changes color on hover */
+.logo { display:inline-grid; place-items:center; width:40px; height:40px; background:var(--link); color:#fff; border-radius:8px; font-weight:700; border:2px solid transparent; box-sizing:border-box; }
+
+@media (prefers-reduced-motion: no-preference) {
+    .logo { transition: border-color 160ms ease, box-shadow 160ms ease; }
+    .home-link:hover .logo { border-color: var(--text); box-shadow: 0 0 0 4px rgba(3,102,214,0.08); }
 }
 
 .footer-content p {
