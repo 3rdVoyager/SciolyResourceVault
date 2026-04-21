@@ -13,12 +13,25 @@
 	    <span class="logo" aria-hidden="true">SRV</span>
 	    <span class="site-title">Scioly Resource Vault</span>
 	  </a>
+	  <!-- Site tabs -->
+	  <nav class="site-tabs" role="tablist" aria-label="Main site tabs">
+	    <button class="tab-btn" role="tab" aria-selected="true" data-tab="test" id="tab-test">Test Index</button>
+		<button class="tab-btn" role="tab" aria-selected="false" data-tab="resources" id="tab-resources">Resources</button>
+	  </nav>
 	</header>
 	<!-- Root element for the small, plain-JS app -->
 	<div id="app"></div>
 
 	<!-- Main script: implements fetching, filtering, and rendering -->
 	<script src="app.js"></script>
+
+	<!-- Resources section (hidden by default) -->
+	<section id="resources" class="hidden">
+		<div class="resources-inner">
+			<h2>Resources</h2>
+			<p>Content for external resources and archived links will appear here. For now this is a placeholder.</p>
+		</div>
+	</section>
 
 	<footer class="site-footer" role="contentinfo" aria-label="Disclaimer and content policy">
  	  <div class="container">

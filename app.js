@@ -32,6 +32,10 @@
 	// `compact` hides secondary metadata when true
 	let compact = false;
 
+	// searchScope controls which fields are searched:
+	// 'collections' = tournament collections, 'archives' = web archives
+	let searchScope = 'collections';
+
 	// ----- Small helper utilities -----
 	// Shorthand to create DOM elements with attributes and children.
 	// create(tagName, attrsObject, ...children)
@@ -74,16 +78,33 @@
 	function matches(item, qLower) {
 		if (!qLower) return true; // empty query matches everything
 
-		// List of fields to search. Edit these to add/remove searchable fields.
-		// Gather field values from the item, supporting multiple possible JSON keys.
-		const fieldsToSearch = [
-			getField(item, 'event_name', 'Tournament Full Name', 'tournament'),
-			getField(item, 'Abbr.', 'abbreviation'),
-			getField(item, 'Year', 'year'),
-			getField(item, 'Division', 'division'),
-			getField(item, 'Level', 'level'),
-			getField(item, 'Notes', 'notes')
-		];
+		// Build list of searchable fields depending on the active scope.
+		let fieldsToSearch = [];
+		if (searchScope === 'collections') {
+			fieldsToSearch = [
+				getField(item, 'Tournament Full Name', 'tournament', 'event_name'),
+				getField(item, 'event_name', 'Event'),
+				getField(item, 'Year', 'year'),
+				getField(item, 'Division', 'division')
+			];
+		} else if (searchScope === 'archives') {
+			// 'archives' searches notes, source_type, and titles as well
+			fieldsToSearch = [
+				getField(item, 'Notes', 'notes'),
+				getField(item, 'source_type', 'Source', 'source'),
+				getField(item, 'Tournament Full Name', 'tournament', 'event_name')
+			];
+		} else {
+			// 'both' — combine collections + archives fields
+			fieldsToSearch = [
+				getField(item, 'Tournament Full Name', 'tournament', 'event_name'),
+				getField(item, 'event_name', 'Event'),
+				getField(item, 'Year', 'year'),
+				getField(item, 'Division', 'division'),
+				getField(item, 'Notes', 'notes'),
+				getField(item, 'source_type', 'Source', 'source')
+			];
+		}
 
 		// Join fields and check if the query substring appears.
 		const haystack = fieldsToSearch.map(normalize).join(' ');
@@ -177,6 +198,20 @@
 	// Append controls: search box first
 	controls.appendChild(input);
 
+	// Search scope select (collections / archives / both)
+	const scopeSelect = create('select', {id: 'scope-select', class: 'filter scope-select', 'aria-label': 'Search scope'});
+	// Label for the scope select
+	const scopeLabel = create('label', {for: 'scope-select', class: 'scope-label'}, 'Type:');
+	scopeSelect.appendChild(create('option', {value: 'collections', selected: true}, 'Tournament Collections'));
+	scopeSelect.appendChild(create('option', {value: 'archives'}, 'Web Archives'));
+	scopeSelect.appendChild(create('option', {value: 'both'}, 'Both'));
+	scopeSelect.addEventListener('change', () => {
+		searchScope = scopeSelect.value;
+		render();
+	});
+	controls.appendChild(scopeLabel);
+	controls.appendChild(scopeSelect);
+
 	// Then the dropdown filters (will contain an "All" option + data-driven options)
 	controls.appendChild(yearLabel);
 	controls.appendChild(yearSelect);
@@ -189,6 +224,33 @@
 	controls.appendChild(create('span', {class: 'spacer'}));
 	root.appendChild(controls);
 	root.appendChild(resultsContainer);
+
+	// Tab handling: show/hide sections based on selected tab
+	const tabTest = document.getElementById('tab-test');
+	const tabResources = document.getElementById('tab-resources');
+	const resourcesSection = document.getElementById('resources');
+
+	function showTab(tabName) {
+		if (tabName === 'test') {
+			// show app, hide resources
+			root.classList.remove('hidden');
+			if (resourcesSection) resourcesSection.classList.add('hidden');
+			if (tabTest) tabTest.setAttribute('aria-selected', 'true');
+			if (tabResources) tabResources.setAttribute('aria-selected', 'false');
+		} else if (tabName === 'resources') {
+			// hide app, show resources
+			root.classList.add('hidden');
+			if (resourcesSection) resourcesSection.classList.remove('hidden');
+			if (tabTest) tabTest.setAttribute('aria-selected', 'false');
+			if (tabResources) tabResources.setAttribute('aria-selected', 'true');
+		}
+	}
+
+	if (tabTest) tabTest.addEventListener('click', () => showTab('test'));
+	if (tabResources) tabResources.addEventListener('click', () => showTab('resources'));
+
+	// default to Test Index
+	showTab('test');
 
 	// ----- Event listeners -----
 	// Input: re-render on each keystroke. For large datasets you might
