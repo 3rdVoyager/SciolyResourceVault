@@ -60,6 +60,37 @@
 		return el;
 	}
 
+	// After render: compute the widest `.meta-bubble` and set CSS variable
+	// so all bubbles have a uniform minimum width matching the widest bubble.
+	let _bubbleResizeTimer = null;
+
+	function adjustBubbleMinWidth() {
+		// debounce
+		if (_bubbleResizeTimer) clearTimeout(_bubbleResizeTimer);
+		_bubbleResizeTimer = setTimeout(() => {
+			const bubbles = resultsContainer.querySelectorAll('.meta-bubble');
+			// compute max width per data-type
+			const maxByType = {};
+			bubbles.forEach(b => {
+				const type = b.getAttribute('data-type') || (b.classList.contains('source-bubble') ? 'source' : 'default');
+				const w = b.scrollWidth;
+				if (!maxByType[type] || w > maxByType[type]) maxByType[type] = w;
+			});
+			// remove any previously set meta vars we don't know about by clearing known keys first
+			const known = ['year','division','level','notes','source','default'];
+			known.forEach(k => resultsContainer.style.removeProperty('--meta-bubble-min-' + k));
+			for (const type in maxByType) {
+				const px = Math.ceil(maxByType[type] + 0);
+				resultsContainer.style.setProperty('--meta-bubble-min-' + type, px + 'px');
+			}
+			// debug: log computed widths for inspection
+			try { console.debug('meta-bubble widths', maxByType); } catch (e) {}
+		}, 60);
+	}
+
+	// Recompute bubble widths after render and on resize
+	window.addEventListener('resize', adjustBubbleMinWidth);
+
 	// Normalize a value to lowercase string for case-insensitive comparisons.
 	function normalize(value) {
 		return String(value || '').toLowerCase();
@@ -378,7 +409,6 @@
 
 		// Read selected dropdown values (empty string means 'All')
 		const yearFilter = yearSelect.value || '';
-		const typeFilter = '';
 		const divisionFilter = divisionSelect.value || '';
 
 		// Filter step (case-insensitive) + apply dropdown filters
@@ -422,31 +452,35 @@
 			const title = create('a', {class: 'title', href: linkHref, target: '_blank', rel: 'noopener noreferrer'}, titleText);
 			card.appendChild(title);
 
-			// Meta: show source (collection/archive) and year, division, level, notes as individual bubbles
+			// Meta: show year, division, level, notes as individual bubbles.
+			// Do not render a "Collection" source bubble — the left border indicates source.
 			if (!compact) {
 				const meta = create('div', {class: 'meta'});
 
-				// Source bubble (keep color style but render as a meta bubble)
-				const srcLabel = src === 'archive' ? 'Archive' : 'Collection';
-				const srcBubble = create('span', {class: 'meta-bubble source-bubble ' + src}, srcLabel);
-				meta.appendChild(srcBubble);
+				// Only show a source bubble for archives (keep archive bubble)
+					if (src === 'archive') {
+						const srcBubble = create('span', {class: 'meta-bubble source-bubble archive', 'data-type': 'source'}, 'Archive');
+						meta.appendChild(srcBubble);
+					}
 
 				const yr = getField(item, 'Year', 'year', 'Year(s)');
 				const lvl = getField(item, 'Level', 'level');
 				const div = getField(item, 'Division', 'division');
 				const notes = getField(item, 'Notes', 'notes');
 
-				[yr, div, lvl, notes].forEach(v => {
-					if (v != null && String(v).trim() !== '') {
-						meta.appendChild(create('span', {class: 'meta-bubble'}, String(v)));
-					}
-				});
+				if (yr != null && String(yr).trim() !== '') meta.appendChild(create('span', {class: 'meta-bubble', 'data-type': 'year'}, String(yr)));
+				if (div != null && String(div).trim() !== '') meta.appendChild(create('span', {class: 'meta-bubble', 'data-type': 'division'}, String(div)));
+				if (lvl != null && String(lvl).trim() !== '') meta.appendChild(create('span', {class: 'meta-bubble', 'data-type': 'level'}, String(lvl)));
 
 				card.appendChild(meta);
 			}
 
 			resultsContainer.appendChild(card);
 		});
+
+		// after DOM updated, adjust bubble minimum width
+		adjustBubbleMinWidth();
+
 	}
 
 	// Load data and render initial state

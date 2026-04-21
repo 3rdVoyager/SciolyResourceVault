@@ -48,32 +48,64 @@ body.dark {
 
 body { background: var(--bg); color: var(--text); }
 
-.results.list .card { display:flex; align-items:center; gap:12px; padding:10px; border-bottom:1px solid var(--border); margin-bottom:6px; }
+.results.list .card { display:flex; align-items:center; gap:8px; padding:4px 6px; border-bottom:1px solid var(--border); margin-bottom:4px; min-height:32px; }
 .results.list .card:last-child { margin-bottom:0; border-bottom:1px solid var(--border); }
 .results.grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:12px; }
 
 /* Make results take full width with a small horizontal gutter */
 .results { width: 100%; margin: 0; box-sizing: border-box; padding: 0 12px; }
-.card { background:var(--card-bg); border:1px solid var(--border); padding:12px; border-radius:8px; box-shadow:0 1px 0 rgba(0,0,0,0.02); }
+.card { background:var(--card-bg); border:1px solid var(--border); padding:6px; border-radius:8px; box-shadow:0 1px 0 rgba(0,0,0,0.02); }
+
 .card .title { font-weight:600; margin-bottom:6px; /* title is an <a> now */ }
+
+/* List-specific layout: make title not flex so the anchor only sizes to its content; push meta to the right */
+.results.list .card .title { margin-bottom:0; flex:0 0 auto; min-width:0; font-size:0.95rem; display:inline-flex; align-items:center; }
+.results.list .meta { margin-top:0; flex:0 0 auto; display:flex; gap:6px; flex-wrap:nowrap; overflow:hidden; align-items:center; max-width:50%; align-self:center; margin-left: auto; }
+
+/* Grid cards: align meta bubbles to start (under the title) */
+.results.grid .card .meta { justify-content:flex-start; }
+
+/* Bubbles will be defined below (consolidated) */
 
 /* Source-specific styles */
 .card--collection { border-left: 4px solid rgba(34,197,94,0.9); }
 .card--archive { border-left: 4px solid rgba(234,88,12,0.95); }
-/* Legacy badge (kept for compatibility) */
-.source-badge { display:inline-block; font-size:0.7rem; padding:4px 8px; border-radius:999px; margin-right:8px; vertical-align:middle; font-weight:700; color:#fff; }
-.source-badge.collection { background: rgba(34,197,94,0.95); }
-.source-badge.archive { background: rgba(234,88,12,0.95); }
-.card .title { vertical-align:middle; }
+/* Legacy .source-badge removed — use .meta-bubble.source-bubble instead */
+.card .title { vertical-align:middle; display:inline-flex; align-items:center; line-height:1; }
 
 /* Source bubble variant that appears with other meta bubbles */
 .meta-bubble.source-bubble.collection { background: rgba(34,197,94,0.95); color: #fff; }
 .meta-bubble.source-bubble.archive { background: rgba(234,88,12,0.95); color: #fff; }
 
-/* Meta bubbles shown under the title */
-.meta { margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-.meta-bubble { display:inline-block; font-size:0.78rem; padding:6px 10px; border-radius:999px; background: rgba(0,0,0,0.06); color:var(--text); font-weight:600; }
+/* Meta bubbles shown under the title: keep inline (no wrap) so bubbles line up horizontally */
+.meta { margin-top:8px; display:flex; gap:4px; flex-wrap:nowrap; align-items:center; overflow:hidden; }
+.meta-bubble {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    /* Per-type minimum widths are set dynamically at runtime. Remove max-width so bubbles size tightly. */
+    box-sizing: border-box;
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.06);
+    color: var(--text);
+    font-weight: 600;
+    height: 18px;
+    line-height: 18px;
+    vertical-align: middle;
+}
 body.dark .meta-bubble { background: rgba(255,255,255,0.04); color:var(--muted); }
+
+/* Per-type minimum widths (computed and set on the `.results` container at runtime) */
+.meta-bubble[data-type="year"] { min-width: var(--meta-bubble-min-year, auto); }
+.meta-bubble[data-type="division"] { min-width: var(--meta-bubble-min-division, auto); }
+.meta-bubble[data-type="level"] { min-width: var(--meta-bubble-min-level, auto); }
+.meta-bubble[data-type="notes"] { min-width: var(--meta-bubble-min-notes, auto); }
+.meta-bubble[data-type="source"] { min-width: var(--meta-bubble-min-source, auto); }
 
 /* Make title links look like normal text by default, but blue on hover */
 .card .title {
@@ -88,6 +120,11 @@ body.dark .meta-bubble { background: rgba(255,255,255,0.04); color:var(--muted);
 .card .link { display:inline-block; padding:6px 8px; background:var(--link); color:#fff; text-decoration:none; border-radius:6px; }
 
 .results.compact .meta { display:none; }
+/* Ensure compact mode fully collapses the meta area and lets the title span the row */
+.results.compact .card .meta { display: none !important; }
+.results.compact .card .title { flex-basis: 100%; }
+
+/* No list-specific bubble overrides — keep grid and list bubbles the same size */
 .empty { padding:16px; color:#666; }
 
 .error { color:#900; background:#fee; padding:10px; border-radius:6px; }
