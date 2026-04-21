@@ -72,12 +72,12 @@
 			// compute max width per data-type
 			const maxByType = {};
 			bubbles.forEach(b => {
-				const type = b.getAttribute('data-type') || (b.classList.contains('source-bubble') ? 'source' : 'default');
+				const type = b.getAttribute('data-type') || 'default';
 				const w = b.scrollWidth;
 				if (!maxByType[type] || w > maxByType[type]) maxByType[type] = w;
 			});
 			// remove any previously set meta vars we don't know about by clearing known keys first
-			const known = ['year','division','level','notes','source','default'];
+			const known = ['year','division','level','default'];
 			known.forEach(k => resultsContainer.style.removeProperty('--meta-bubble-min-' + k));
 			for (const type in maxByType) {
 				const px = Math.ceil(maxByType[type] + 0);
@@ -123,21 +123,19 @@
 				getField(item, 'Division', 'division')
 			];
 		} else if (searchScope === 'archives') {
-			// 'archives' searches notes, source_type, and titles as well
+			// archives: search titles and basic metadata (no notes/source)
 			fieldsToSearch = [
-				getField(item, 'Notes', 'notes'),
-				getField(item, 'source_type', 'Source', 'source'),
-				getField(item, 'Tournament Full Name', 'tournament', 'event_name')
+				getField(item, 'Tournament Full Name', 'tournament', 'event_name'),
+				getField(item, 'Year', 'year', 'Year(s)'),
+				getField(item, 'Division', 'division')
 			];
 		} else {
-			// 'both' — combine collections + archives fields
+			// both: combine collections + archives fields (exclude notes/source)
 			fieldsToSearch = [
 				getField(item, 'Tournament Full Name', 'tournament', 'event_name'),
 				getField(item, 'event_name', 'Event'),
 				getField(item, 'Year', 'year', 'Year(s)'),
-				getField(item, 'Division', 'division'),
-				getField(item, 'Notes', 'notes'),
-				getField(item, 'source_type', 'Source', 'source')
+				getField(item, 'Division', 'division')
 			];
 		}
 
@@ -239,8 +237,8 @@
 	// Toggle button to switch between grid and list
 	const toggleBtn = create('button', {type: 'button', class: 'view-toggle'}, 'Switch to list');
 
-	// Compact view toggle button - toggles showing less metadata
-	const compactBtn = create('button', {type: 'button', class: 'compact-toggle'}, 'Compact');
+	// Metadata selection: users can choose which metadata bubbles to show
+	const metadataBtn = create('button', {type: 'button', class: 'control-btn metadata-btn', 'aria-expanded': 'false'}, 'Metadata');
 
 	// Results container - we toggle class 'grid' / 'list' on this element
 	const resultsContainer = create('div', {class: 'results grid'});
@@ -270,11 +268,89 @@
 	controls.appendChild(divisionLabel);
 	controls.appendChild(divisionSelect);
 
-	// View toggle and compact button (compact button placed before spacer)
+	// View toggle and metadata button (metadata panel will be shown when the button is toggled)
 	controls.appendChild(toggleBtn);
-	controls.appendChild(compactBtn);
+	controls.appendChild(metadataBtn);
 	controls.appendChild(create('span', {class: 'spacer'}));
 	root.appendChild(controls);
+	// Metadata panel (popover) - appended to page header or controls below
+	const metadataPanel = create('div', {class: 'settings-panel metadata-panel', 'aria-hidden': 'true', id: 'metadata-panel'});
+	// checkbox helper
+	function createCheckbox(id, labelText, checked) {
+		const idAttr = 'meta-' + id;
+		const wrapper = create('label', {class: 'meta-option', for: idAttr});
+		const chk = create('input', {type: 'checkbox', id: idAttr});
+		if (checked) chk.checked = true;
+		wrapper.appendChild(chk);
+		wrapper.appendChild(document.createTextNode(' ' + labelText));
+		return {wrapper, chk};
+	}
+
+	// default enabled metadata (Notes and Source removed from menu)
+	const enabledMetadata = new Set(['year','division','level']);
+
+	// build panel content - only year/division/level options
+	const cbYear = createCheckbox('year', 'Year', true);
+	const cbDivision = createCheckbox('division', 'Division', true);
+	const cbLevel = createCheckbox('level', 'Level', true);
+
+	// quick buttons
+	const metaAll = create('button', {type: 'button', class: 'control-btn'}, 'All');
+	const metaNone = create('button', {type: 'button', class: 'control-btn'}, 'None');
+
+	metadataPanel.appendChild(cbYear.wrapper);
+	metadataPanel.appendChild(cbDivision.wrapper);
+	metadataPanel.appendChild(cbLevel.wrapper);
+	metadataPanel.appendChild(create('div', {style: 'margin-top:8px; display:flex; gap:8px;'}, metaAll, metaNone));
+
+	// place panel on the document body and position it next to the button when opened
+	document.body.appendChild(metadataPanel);
+
+	// wire interactions for the three options
+	function updateEnabledFromCheckboxes() {
+		enabledMetadata.clear();
+		if (cbYear.chk.checked) enabledMetadata.add('year');
+		if (cbDivision.chk.checked) enabledMetadata.add('division');
+		if (cbLevel.chk.checked) enabledMetadata.add('level');
+		render();
+	}
+	[cbYear.chk, cbDivision.chk, cbLevel.chk].forEach(input => input.addEventListener('change', updateEnabledFromCheckboxes));
+	metaAll.addEventListener('click', () => { cbYear.chk.checked = cbDivision.chk.checked = cbLevel.chk.checked = true; updateEnabledFromCheckboxes(); });
+	metaNone.addEventListener('click', () => { cbYear.chk.checked = cbDivision.chk.checked = cbLevel.chk.checked = false; updateEnabledFromCheckboxes(); });
+
+	metadataBtn.addEventListener('click', (e) => {
+		const expanded = metadataBtn.getAttribute('aria-expanded') === 'true';
+		if (expanded) {
+			metadataBtn.setAttribute('aria-expanded', 'false');
+			metadataPanel.setAttribute('aria-hidden', 'true');
+		} else {
+			// position the panel under the button using viewport coordinates
+			const rect = metadataBtn.getBoundingClientRect();
+			metadataPanel.style.position = 'absolute';
+			// make visible first so we can measure its width, then choose alignment
+			metadataBtn.setAttribute('aria-expanded', 'true');
+			metadataPanel.setAttribute('aria-hidden', 'false');
+			requestAnimationFrame(() => {
+				// ensure any CSS 'right' from .settings-panel doesn't constrain us
+				metadataPanel.style.right = 'auto';
+				const panelWidth = metadataPanel.offsetWidth || metadataPanel.getBoundingClientRect().width;
+				const margin = 12;
+				const scrollX = window.scrollX || window.pageXOffset || 0;
+				const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+				// default: left-align panel to the button's left
+				let left = rect.left + scrollX;
+				// if this would overflow the viewport to the right, align the panel's right edge
+				// with the button's right edge so it opens leftwards (like the settings menu)
+				if (left + panelWidth > scrollX + viewportWidth - margin) {
+					left = rect.right + scrollX - panelWidth;
+				}
+				// clamp to viewport left edge
+				if (left < scrollX + margin) left = scrollX + margin;
+				metadataPanel.style.left = left + 'px';
+				metadataPanel.style.top = (rect.bottom + window.scrollY + 8) + 'px';
+			});
+		}
+	});
 	root.appendChild(resultsContainer);
 
 	// Tab handling: show/hide sections based on selected tab
@@ -377,29 +453,30 @@
 		settingsPanel.setAttribute('aria-hidden', String(expanded));
 	});
 
-	// Close the settings panel when clicking outside or pressing Escape
+	// Close the settings or metadata panel when clicking outside, and close on Escape.
 	document.addEventListener('click', (e) => {
 		const target = e.target;
 		if (!settingsPanel.contains(target) && !settingsBtn.contains(target)) {
 			settingsBtn.setAttribute('aria-expanded', 'false');
 			settingsPanel.setAttribute('aria-hidden', 'true');
 		}
+		if (typeof metadataPanel !== 'undefined' && !metadataPanel.contains(target) && !metadataBtn.contains(target)) {
+			metadataBtn.setAttribute('aria-expanded', 'false');
+			metadataPanel.setAttribute('aria-hidden', 'true');
+		}
 	});
 	document.addEventListener('keydown', (e) => {
 		if (e.key === 'Escape') {
 			settingsBtn.setAttribute('aria-expanded', 'false');
 			settingsPanel.setAttribute('aria-hidden', 'true');
+			if (typeof metadataPanel !== 'undefined') {
+				metadataBtn.setAttribute('aria-expanded', 'false');
+				metadataPanel.setAttribute('aria-hidden', 'true');
+			}
 		}
 	});
 
-	// Compact checkbox toggles a class on resultsContainer to hide/show metadata
-	compactBtn.addEventListener('click', () => {
-		compact = !compact;
-		resultsContainer.classList.toggle('compact', compact);
-		// Update button text: when currently compact, show 'Detailed' to switch to detailed view;
-		// when currently detailed, show 'Compact' to switch to compact view.
-		compactBtn.textContent = compact ? 'Detailed' : 'Compact';
-	});
+	// Metadata panel handles which meta bubbles are displayed; default selection already set.
 
 	// ----- Render function -----
 	// Uses Array.prototype.filter() (case-insensitive) to narrow resources,
@@ -452,26 +529,19 @@
 			const title = create('a', {class: 'title', href: linkHref, target: '_blank', rel: 'noopener noreferrer'}, titleText);
 			card.appendChild(title);
 
-			// Meta: show year, division, level, notes as individual bubbles.
-			// Do not render a "Collection" source bubble — the left border indicates source.
-			if (!compact) {
-				const meta = create('div', {class: 'meta'});
+			// Meta: show selected metadata bubbles (year/division/level)
+			const meta = create('div', {class: 'meta'});
 
-				// Only show a source bubble for archives (keep archive bubble)
-					if (src === 'archive') {
-						const srcBubble = create('span', {class: 'meta-bubble source-bubble archive', 'data-type': 'source'}, 'Archive');
-						meta.appendChild(srcBubble);
-					}
+			const yr = getField(item, 'Year', 'year', 'Year(s)');
+			const lvl = getField(item, 'Level', 'level');
+			const div = getField(item, 'Division', 'division');
 
-				const yr = getField(item, 'Year', 'year', 'Year(s)');
-				const lvl = getField(item, 'Level', 'level');
-				const div = getField(item, 'Division', 'division');
-				const notes = getField(item, 'Notes', 'notes');
+			if ((typeof enabledMetadata === 'undefined' || enabledMetadata.has('year')) && yr != null && String(yr).trim() !== '') meta.appendChild(create('span', {class: 'meta-bubble', 'data-type': 'year'}, String(yr)));
+			if ((typeof enabledMetadata === 'undefined' || enabledMetadata.has('division')) && div != null && String(div).trim() !== '') meta.appendChild(create('span', {class: 'meta-bubble', 'data-type': 'division'}, String(div)));
+			if ((typeof enabledMetadata === 'undefined' || enabledMetadata.has('level')) && lvl != null && String(lvl).trim() !== '') meta.appendChild(create('span', {class: 'meta-bubble', 'data-type': 'level'}, String(lvl)));
 
-				if (yr != null && String(yr).trim() !== '') meta.appendChild(create('span', {class: 'meta-bubble', 'data-type': 'year'}, String(yr)));
-				if (div != null && String(div).trim() !== '') meta.appendChild(create('span', {class: 'meta-bubble', 'data-type': 'division'}, String(div)));
-				if (lvl != null && String(lvl).trim() !== '') meta.appendChild(create('span', {class: 'meta-bubble', 'data-type': 'level'}, String(lvl)));
-
+			// Only append the metadata container if it contains visible bubbles.
+			if (meta.children && meta.children.length > 0) {
 				card.appendChild(meta);
 			}
 

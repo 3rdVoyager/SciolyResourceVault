@@ -73,9 +73,7 @@ body { background: var(--bg); color: var(--text); }
 /* Legacy .source-badge removed — use .meta-bubble.source-bubble instead */
 .card .title { vertical-align:middle; display:inline-flex; align-items:center; line-height:1; }
 
-/* Source bubble variant that appears with other meta bubbles */
-.meta-bubble.source-bubble.collection { background: rgba(34,197,94,0.95); color: #fff; }
-.meta-bubble.source-bubble.archive { background: rgba(234,88,12,0.95); color: #fff; }
+/* (source bubble variants removed) */
 
 /* Meta bubbles shown under the title: keep inline (no wrap) so bubbles line up horizontally */
 .meta { margin-top:8px; display:flex; gap:4px; flex-wrap:nowrap; align-items:center; overflow:hidden; }
@@ -104,8 +102,6 @@ body.dark .meta-bubble { background: rgba(255,255,255,0.04); color:var(--muted);
 .meta-bubble[data-type="year"] { min-width: var(--meta-bubble-min-year, auto); }
 .meta-bubble[data-type="division"] { min-width: var(--meta-bubble-min-division, auto); }
 .meta-bubble[data-type="level"] { min-width: var(--meta-bubble-min-level, auto); }
-.meta-bubble[data-type="notes"] { min-width: var(--meta-bubble-min-notes, auto); }
-.meta-bubble[data-type="source"] { min-width: var(--meta-bubble-min-source, auto); }
 
 /* Make title links look like normal text by default, but blue on hover */
 .card .title {
@@ -223,6 +219,12 @@ body.dark .card { box-shadow: none; }
 .settings-panel { position:absolute; top:calc(100% + 8px); right:12px; margin-top:0; min-width:200px; background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:10px; box-shadow:0 8px 24px rgba(2,6,23,0.12); z-index:200; display:none; }
 .settings-panel[aria-hidden="false"] { display:block; }
 .settings-panel .theme-toggle { margin:0; }
+
+/* Metadata panel reuses settings-panel styling; small tweaks */
+.metadata-panel { min-width:180px; max-width:calc(100vw - 32px); width:auto; padding:8px; display:none; }
+.metadata-panel[aria-hidden="false"] { display:block; }
+.metadata-panel .meta-option { display:block; padding:6px 8px; border-radius:6px; cursor:pointer; font-size:0.92rem; }
+.metadata-panel .meta-option input { margin-right:8px; transform:translateY(1px); }
 
 /* Restyle settings toggle: show gear icon and caret, with clear hover/focus states */
 .settings-btn { display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:8px; background:transparent; border:1px solid var(--border); color:var(--text); cursor:pointer; font-weight:600; }
