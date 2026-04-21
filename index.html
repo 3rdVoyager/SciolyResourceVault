@@ -13,11 +13,15 @@
 	    <span class="logo" aria-hidden="true">SRV</span>
 	    <span class="site-title">Scioly Resource Vault</span>
 	  </a>
-	  <!-- Site tabs -->
-	  <nav class="site-tabs" role="tablist" aria-label="Main site tabs">
-	    <button class="tab-btn" role="tab" aria-selected="true" data-tab="test" id="tab-test">External Test Index</button>
-		<button class="tab-btn" role="tab" aria-selected="false" data-tab="resources" id="tab-resources">Resources</button>
-	  </nav>
+			<!-- Sidebar toggle and slide-out navigation -->
+			<button id="sidebar-toggle" class="sidebar-toggle" aria-controls="sidebar" aria-expanded="false" aria-label="Open sidebar">☰</button>
+			<aside id="sidebar" class="sidebar" aria-hidden="true">
+				<nav class="site-tabs" role="tablist" aria-label="Main site tabs">
+					<button class="tab-btn" role="tab" aria-selected="true" data-tab="test" id="tab-test">External Resource Index</button>
+					<button class="tab-btn" role="tab" aria-selected="false" data-tab="resources" id="tab-resources">Internal Resource Index</button>
+				</nav>
+			</aside>
+			<div id="sidebar-overlay" class="sidebar-overlay hidden" tabindex="-1" aria-hidden="true"></div>
 	</header>
 	<!-- Root element for the small, plain-JS app -->
 	<div id="app"></div>
@@ -32,6 +36,8 @@
 			<p>Content for external resources and archived links will appear here. For now this is a placeholder.</p>
 		</div>
 	</section>
+
+	<!-- internal-resources removed; using existing external resources section as Internal Resource Index -->
 
 	<footer class="site-footer" role="contentinfo" aria-label="Disclaimer and content policy">
  	  <div class="container">

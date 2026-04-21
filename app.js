@@ -396,7 +396,7 @@
 			if (tabTest) tabTest.setAttribute('aria-selected', 'true');
 			if (tabResources) tabResources.setAttribute('aria-selected', 'false');
 		} else if (tabName === 'resources') {
-			// hide app, show resources
+			// hide app, show resources section
 			root.classList.add('hidden');
 			if (resourcesSection) resourcesSection.classList.remove('hidden');
 			if (tabTest) tabTest.setAttribute('aria-selected', 'false');
@@ -450,6 +450,30 @@
 		controls.appendChild(settingsBtn);
 		controls.appendChild(settingsPanel);
 	}
+
+	// Sidebar toggle wiring: open/close left slide-out and overlay
+	const sidebarToggle = document.getElementById('sidebar-toggle');
+	const sidebar = document.getElementById('sidebar');
+	const sidebarOverlay = document.getElementById('sidebar-overlay');
+	function setSidebar(open) {
+		if (!sidebar) return;
+		const shouldOpen = typeof open === 'boolean' ? open : !sidebar.classList.contains('open');
+		if (shouldOpen) {
+			sidebar.classList.add('open');
+			sidebar.setAttribute('aria-hidden', 'false');
+			if (sidebarToggle) sidebarToggle.setAttribute('aria-expanded', 'true');
+			if (sidebarOverlay) { sidebarOverlay.classList.remove('hidden'); sidebarOverlay.classList.add('visible'); }
+		} else {
+			sidebar.classList.remove('open');
+			sidebar.setAttribute('aria-hidden', 'true');
+			if (sidebarToggle) sidebarToggle.setAttribute('aria-expanded', 'false');
+			if (sidebarOverlay) { sidebarOverlay.classList.remove('visible'); sidebarOverlay.classList.add('hidden'); }
+		}
+	}
+	if (sidebarToggle) sidebarToggle.addEventListener('click', () => setSidebar());
+	if (sidebarOverlay) sidebarOverlay.addEventListener('click', () => setSidebar(false));
+	// close sidebar on Escape (also handled elsewhere); keep here for robustness
+	document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setSidebar(false); });
 
 	// Initialize theme from localStorage or system preference
 	function applyTheme(theme) {

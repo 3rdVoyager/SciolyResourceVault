@@ -178,6 +178,20 @@ body.dark .card { box-shadow: none; }
 .site-header { display:flex; align-items:center; gap:12px; margin-bottom:16px; width:100%; padding:0 12px; box-sizing:border-box; position:relative; }
 .site-header .settings-btn { margin-left: auto; }
 
+/* Sidebar (slide-out) styles */
+.sidebar-toggle { background:transparent; border:1px solid var(--border); padding:8px 10px; border-radius:8px; cursor:pointer; font-size:1.05rem; color:var(--text); }
+.sidebar { position:fixed; left:0; top:0; bottom:0; width:260px; max-width:80vw; background:var(--card-bg); border-right:1px solid var(--border); box-shadow:2px 0 12px rgba(0,0,0,0.08); transform:translateX(-100%); transition:transform 220ms cubic-bezier(.2,.8,.2,1); z-index:1200; padding:18px 12px; box-sizing:border-box; }
+.sidebar.open { transform:translateX(0); }
+.sidebar .site-tabs { display:flex; flex-direction:column; gap:8px; }
+.sidebar .tab-btn { text-align:left; width:100%; }
+.sidebar .tab-btn[aria-selected="true"] { background: rgba(3,102,214,0.06); border-color: rgba(3,102,214,0.12); }
+.sidebar-overlay { position:fixed; left:0; top:0; right:0; bottom:0; background: rgba(0,0,0,0.28); opacity:0; pointer-events:none; transition:opacity 180ms ease; z-index:1100; }
+.sidebar-overlay.visible { opacity:1; pointer-events:auto; }
+.sidebar-overlay.hidden { opacity:0; pointer-events:none; }
+
+/* Dark mode tweak for the sidebar toggle to ensure visibility */
+body.dark .sidebar-toggle { color: var(--text); border-color: var(--border); background: rgba(255,255,255,0.02); }
+
 /* Tabs */
 .site-tabs { margin-left:16px; display:inline-flex; gap:8px; }
 .tab-btn { background:transparent; border:1px solid transparent; padding:8px 10px; border-radius:8px; cursor:pointer; font-weight:600; color:var(--text); }
