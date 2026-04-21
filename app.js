@@ -404,8 +404,8 @@
 		}
 	}
 
-	if (tabTest) tabTest.addEventListener('click', () => showTab('test'));
-	if (tabResources) tabResources.addEventListener('click', () => showTab('resources'));
+	if (tabTest) tabTest.addEventListener('click', () => { showTab('test'); setSidebar(false); });
+	if (tabResources) tabResources.addEventListener('click', () => { showTab('resources'); setSidebar(false); });
 
 	// default to Test Index
 	showTab('test');

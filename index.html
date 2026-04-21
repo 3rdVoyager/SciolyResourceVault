@@ -9,13 +9,17 @@
 </head>
 <body>
 	<header class="site-header" role="banner">
-	  <a href="./" class="home-link" aria-label="Return to main page">
-	    <span class="logo" aria-hidden="true">SRV</span>
-	    <span class="site-title">Scioly Resource Vault</span>
-	  </a>
-			<!-- Sidebar toggle and slide-out navigation -->
+			<!-- Logo (links home), sidebar toggle, and page title -->
 			<button id="sidebar-toggle" class="sidebar-toggle" aria-controls="sidebar" aria-expanded="false" aria-label="Open sidebar">☰</button>
+			<a href="./" class="home-link" aria-label="Return to main page">
+				<span class="logo" aria-hidden="true">SRV</span>
+			</a>
+			<a href="./" class="site-title-link"><span class="site-title">Scioly Resource Vault</span></a>
 			<aside id="sidebar" class="sidebar" aria-hidden="true">
+				<div class="sidebar-header">
+					<span class="logo" aria-hidden="true">SRV</span>
+					<div class="sidebar-title">Navigation</div>
+				</div>
 				<nav class="site-tabs" role="tablist" aria-label="Main site tabs">
 					<button class="tab-btn" role="tab" aria-selected="true" data-tab="test" id="tab-test">External Resource Index</button>
 					<button class="tab-btn" role="tab" aria-selected="false" data-tab="resources" id="tab-resources">Internal Resource Index</button>
@@ -26,18 +30,18 @@
 	<!-- Root element for the small, plain-JS app -->
 	<div id="app"></div>
 
-	<!-- Main script: implements fetching, filtering, and rendering -->
-	<script src="app.js"></script>
-
 	<!-- Resources section (hidden by default) -->
 	<section id="resources" class="hidden">
 		<div class="resources-inner">
-			<h2>Resources</h2>
-			<p>Content for external resources and archived links will appear here. For now this is a placeholder.</p>
+			<h2>Internal Resource Index</h2>
+			<p>This section is currently a placeholder and will be populated with internal resource entries soon. If you have resources to add, please let us know.</p>
 		</div>
 	</section>
 
 	<!-- internal-resources removed; using existing external resources section as Internal Resource Index -->
+
+	<!-- Main script: implements fetching, filtering, and rendering -->
+	<script src="app.js"></script>
 
 	<footer class="site-footer" role="contentinfo" aria-label="Disclaimer and content policy">
  	  <div class="container">
