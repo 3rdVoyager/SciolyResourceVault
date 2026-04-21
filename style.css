@@ -297,6 +297,8 @@ body.dark .sidebar-toggle { color: var(--text); border-color: var(--border); bac
 .metadata-panel .meta-option.meta-checked[data-type="year"] { background: rgba(239,68,68,0.10); }
 .metadata-panel .meta-option.meta-checked[data-type="division"] { background: rgba(59,130,246,0.12); }
 .metadata-panel .meta-option.meta-checked[data-type="level"] { background: rgba(245,158,11,0.12); }
+/* Make the Source option appear green when checked to match source bubbles */
+.metadata-panel .meta-option.meta-checked[data-type="source"] { background: rgba(34,197,94,0.10); }
 
 .metadata-panel .meta-option:hover { background: rgba(3,102,214,0.03); }
 
@@ -304,6 +306,18 @@ body.dark .sidebar-toggle { color: var(--text); border-color: var(--border); bac
 .metadata-panel .meta-option[data-type="year"] input { accent-color: rgba(239,68,68,0.95); }
 .metadata-panel .meta-option[data-type="division"] input { accent-color: rgba(59,130,246,0.95); }
 .metadata-panel .meta-option[data-type="level"] input { accent-color: rgba(245,158,11,0.95); }
+/* Source checkbox tint color */
+.metadata-panel .meta-option[data-type="source"] input { accent-color: rgba(34,197,94,0.95); }
+
+/* Quick action row (All / None) at top of metadata panel: small outline-only buttons */
+.metadata-panel .quick-actions { display:flex; gap:8px; margin-bottom:8px; }
+.metadata-panel .control-btn.quick { flex:0 0 auto; padding:6px 8px; border-radius:8px; font-weight:700; font-size:0.85rem; background:transparent; color:var(--text); border:1px solid rgba(0,0,0,0.12); }
+.metadata-panel .control-btn.quick:hover { background: rgba(3,102,214,0.04); box-shadow: 0 6px 18px rgba(2,6,23,0.04); }
+/* In dark mode use white text and a faint white outline to ensure contrast */
+body.dark .metadata-panel .control-btn.quick { color:#ffffff; border-color: rgba(255,255,255,0.12); }
+body.dark .metadata-panel .control-btn.quick:hover { background: rgba(255,255,255,0.04); }
+/* Keep primary class behavior subtle (same outline style but slightly bolder) */
+.metadata-panel .control-btn.quick.primary { border-width:1.5px; }
 
 .metadata-panel .meta-option:focus-within { outline: 3px solid rgba(3,102,214,0.12); outline-offset: 2px; }
 

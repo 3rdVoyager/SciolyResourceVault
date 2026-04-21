@@ -307,14 +307,15 @@
 	const cbSource = createCheckbox('source', 'Source', enabledMetadata.has('source'));
 
 	// quick buttons
-	const metaAll = create('button', {type: 'button', class: 'control-btn'}, 'All');
-	const metaNone = create('button', {type: 'button', class: 'control-btn'}, 'None');
+	const metaAll = create('button', {type: 'button', class: 'control-btn quick primary', 'aria-label': 'Enable all metadata'}, 'All');
+	const metaNone = create('button', {type: 'button', class: 'control-btn quick', 'aria-label': 'Disable all metadata'}, 'None');
 
+	// place quick buttons at the top for easier access
+	metadataPanel.appendChild(create('div', {class: 'quick-actions'}, metaAll, metaNone));
 	metadataPanel.appendChild(cbYear.wrapper);
 	metadataPanel.appendChild(cbDivision.wrapper);
 	metadataPanel.appendChild(cbLevel.wrapper);
 	metadataPanel.appendChild(cbSource.wrapper);
-	metadataPanel.appendChild(create('div', {style: 'margin-top:8px; display:flex; gap:8px;'}, metaAll, metaNone));
 
 	// reflect initial checked state visually on wrappers
 	cbYear.wrapper.classList.toggle('meta-checked', cbYear.chk.checked);
@@ -345,8 +346,8 @@
 		render();
 	}
 	[cbYear.chk, cbDivision.chk, cbLevel.chk, cbSource.chk].forEach(input => input.addEventListener('change', updateEnabledFromCheckboxes));
-	metaAll.addEventListener('click', () => { cbYear.chk.checked = cbDivision.chk.checked = cbLevel.chk.checked = true; updateEnabledFromCheckboxes(); });
-	metaNone.addEventListener('click', () => { cbYear.chk.checked = cbDivision.chk.checked = cbLevel.chk.checked = false; updateEnabledFromCheckboxes(); });
+		metaAll.addEventListener('click', () => { cbYear.chk.checked = cbDivision.chk.checked = cbLevel.chk.checked = cbSource.chk.checked = true; updateEnabledFromCheckboxes(); });
+		metaNone.addEventListener('click', () => { cbYear.chk.checked = cbDivision.chk.checked = cbLevel.chk.checked = cbSource.chk.checked = false; updateEnabledFromCheckboxes(); });
 
 	metadataBtn.addEventListener('click', (e) => {
 		const expanded = metadataBtn.getAttribute('aria-expanded') === 'true';
