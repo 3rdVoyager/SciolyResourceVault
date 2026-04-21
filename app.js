@@ -17,13 +17,17 @@
 
 (function () {
 	// ----- Configuration -----
-	// Path to the local JSON file. Keep it at the project root for simplicity.
-	const DATA_URL = './resources.json';
+	// Paths to the local JSON files. Keep them at the project root for simplicity.
+	const COLLECTIONS_URL = './external_test_collections.json';
+	const ARCHIVES_URL = './external_test_archives.json';
 	// ID of the root element in index.html where the app will render
 	const ROOT_ID = 'app';
 
 	// ----- State -----
-	// `resources` will hold the array loaded from resources.json
+	// `collections` and `archives` hold the two dataset arrays; `resources` is
+	// the currently-displayed array (depends on `searchScope`).
+	let collections = [];
+	let archives = [];
 	let resources = [];
 	// `query` stores the current search text (trimmed)
 	let query = '';
@@ -84,7 +88,7 @@
 			fieldsToSearch = [
 				getField(item, 'Tournament Full Name', 'tournament', 'event_name'),
 				getField(item, 'event_name', 'Event'),
-				getField(item, 'Year', 'year'),
+				getField(item, 'Year', 'year', 'Year(s)'),
 				getField(item, 'Division', 'division')
 			];
 		} else if (searchScope === 'archives') {
@@ -99,7 +103,7 @@
 			fieldsToSearch = [
 				getField(item, 'Tournament Full Name', 'tournament', 'event_name'),
 				getField(item, 'event_name', 'Event'),
-				getField(item, 'Year', 'year'),
+				getField(item, 'Year', 'year', 'Year(s)'),
 				getField(item, 'Division', 'division'),
 				getField(item, 'Notes', 'notes'),
 				getField(item, 'source_type', 'Source', 'source')
@@ -112,48 +116,64 @@
 	}
 
 	// ----- Data loading -----
-	// Fetch the JSON file from the same folder. Uses the Fetch API.
+	// Fetch the two JSON files from the same folder. Uses the Fetch API.
 	async function loadData() {
+		// Fetch both JSON files in parallel. If one fails, fall back to an
+		// empty array for that dataset and continue.
 		try {
-			const res = await fetch(DATA_URL);
-			if (!res.ok) throw new Error('Network response was not ok: ' + res.status);
-			resources = await res.json();
-			// After loading data, populate dropdowns with unique values
-			populateFilters(resources);
-			// Render results after loading
+			const [cols, archs] = await Promise.all([
+				fetch(COLLECTIONS_URL).then(r => r.ok ? r.json() : []).catch(() => []),
+				fetch(ARCHIVES_URL).then(r => r.ok ? r.json() : []).catch(() => [])
+			]);
+
+			collections = Array.isArray(cols) ? cols : [];
+			archives = Array.isArray(archs) ? archs : [];
+
+			// Tag each item with its origin so render can style/label them.
+			collections.forEach(it => { try { it.__source = 'collection'; } catch (e) {} });
+			archives.forEach(it => { try { it.__source = 'archive'; } catch (e) {} });
+
+			// Populate filters using the combined data set so dropdowns contain
+			// values from both sources.
+			populateFilters(collections.concat(archives));
+
+			// Initialize displayed resources according to the current scope
+			updateResourcesForScope();
 			render();
 		} catch (err) {
-			// Show a minimal error message in the app root and log to console.
 			const root = document.getElementById(ROOT_ID);
 			if (root) root.innerHTML = '<pre class="error">Error loading data: ' + err.message + '</pre>';
-			console.error('Failed to load resources.json', err);
+			console.error('Failed to load JSON data', err);
 		}
 
 		// Populate filter dropdowns with unique, sorted options from the data.
 		function populateFilters(data) {
-			// Helper: build a sorted unique array of values for a given key
 			function uniqueValues(key) {
 				const set = new Set();
 				data.forEach(item => {
-					const v = item[key];
+					// Use `getField` to support multiple possible column names
+					const v = getField(item, key, key.toLowerCase(), key + '(s)');
 					if (v != null && String(v).trim() !== '') set.add(String(v));
 				});
 				return Array.from(set).sort();
 			}
 
-			// Fill a select element with an 'All' option + values
 			function fillSelect(selectEl, values) {
-				selectEl.innerHTML = ''; // clear
-				// 'All' option (empty value)
+				selectEl.innerHTML = '';
 				selectEl.appendChild(create('option', {value: ''}, 'All'));
 				values.forEach(v => selectEl.appendChild(create('option', {value: v}, v)));
 			}
 
-			// Year options (sorted) - use the exact JSON keys from your CSV
 			fillSelect(yearSelect, uniqueValues('Year'));
-			// Division options (use 'Division' as in the CSV)
 			fillSelect(divisionSelect, uniqueValues('Division'));
 		}
+	}
+
+	// Update the `resources` variable according to the currently selected scope.
+	function updateResourcesForScope() {
+		if (searchScope === 'collections') resources = collections.slice();
+		else if (searchScope === 'archives') resources = archives.slice();
+		else resources = collections.concat(archives);
 	}
 
 	// ----- Build UI -----
@@ -207,6 +227,7 @@
 	scopeSelect.appendChild(create('option', {value: 'both'}, 'Both'));
 	scopeSelect.addEventListener('change', () => {
 		searchScope = scopeSelect.value;
+		updateResourcesForScope();
 		render();
 	});
 	controls.appendChild(scopeLabel);
@@ -266,10 +287,11 @@
 		select.addEventListener('change', () => render());
 	});
 
-	// Toggle between grid and list views
+	// Toggle between grid and list views (preserve other classes like 'compact')
 	toggleBtn.addEventListener('click', () => {
 		viewMode = viewMode === 'grid' ? 'list' : 'grid';
-		resultsContainer.className = 'results ' + viewMode;
+		resultsContainer.classList.toggle('list', viewMode === 'list');
+		resultsContainer.classList.toggle('grid', viewMode === 'grid');
 		toggleBtn.textContent = viewMode === 'grid' ? 'Switch to list' : 'Switch to grid';
 	});
 
@@ -363,7 +385,7 @@
 		const matched = resources.filter(item => {
 			// First check dropdown filters: if a filter has a selected value,
 			// require the item's corresponding field to equal that value.
-			const itemYear = String(getField(item, 'Year', 'year') || '');
+				const itemYear = String(getField(item, 'Year', 'year', 'Year(s)') || '');
 			const itemDivision = String(getField(item, 'Division', 'division') || '');
 			if (yearFilter && itemYear !== yearFilter) return false;
 			if (divisionFilter && itemDivision !== divisionFilter) return false;
@@ -385,27 +407,41 @@
 		matched.forEach(item => {
 			// Card container
 			const card = create('div', {class: 'card'});
+			// Add a class and badge based on source (collection vs archive)
+			const src = item.__source === 'archive' ? 'archive' : 'collection';
+			card.classList.add(src === 'archive' ? 'card--archive' : 'card--collection');
 
-			// Main title: tournament name (fall back to event_name)
-			// Title prefers 'Tournament Full Name', then 'Abbr.', then previous keys
-			const titleText = getField(item, 'Tournament Full Name', 'tournament', 'event_name', 'Abbr.', 'abbreviation') || '(no title)';
+			// Main title: prefer Organization for archive entries, otherwise
+			// prefer 'Tournament Full Name' / event name / abbreviation.
+			const titleText = (
+				getField(item, 'Organization', 'organization') ||
+				getField(item, 'Tournament Full Name', 'tournament', 'event_name', 'Abbr.', 'abbreviation')
+			) || '(no title)';
 			// Link field in the CSV is 'Link'
 			const linkHref = getField(item, 'Link', 'link_url') || '#';
 			const title = create('a', {class: 'title', href: linkHref, target: '_blank', rel: 'noopener noreferrer'}, titleText);
 			card.appendChild(title);
 
-			// Meta: year, event_name (if any), source_type
+			// Meta: show source (collection/archive) and year, division, level, notes as individual bubbles
 			if (!compact) {
-				const metaParts = [];
-				const yr = getField(item, 'Year', 'year');
+				const meta = create('div', {class: 'meta'});
+
+				// Source bubble (keep color style but render as a meta bubble)
+				const srcLabel = src === 'archive' ? 'Archive' : 'Collection';
+				const srcBubble = create('span', {class: 'meta-bubble source-bubble ' + src}, srcLabel);
+				meta.appendChild(srcBubble);
+
+				const yr = getField(item, 'Year', 'year', 'Year(s)');
 				const lvl = getField(item, 'Level', 'level');
 				const div = getField(item, 'Division', 'division');
 				const notes = getField(item, 'Notes', 'notes');
-				if (yr) metaParts.push(yr);
-				if (div) metaParts.push(div);
-				if (lvl) metaParts.push(lvl);
-				if (notes) metaParts.push(notes);
-				const meta = create('div', {class: 'meta'}, metaParts.join(' • '));
+
+				[yr, div, lvl, notes].forEach(v => {
+					if (v != null && String(v).trim() !== '') {
+						meta.appendChild(create('span', {class: 'meta-bubble'}, String(v)));
+					}
+				});
+
 				card.appendChild(meta);
 			}
 
@@ -420,7 +456,9 @@
 	window.SciolyResourceVault = {
 		reload: loadData,
 		getData: () => resources,
-		setView: (v) => { viewMode = v; resultsContainer.className = 'results ' + viewMode; }
+		getCollections: () => collections,
+		getArchives: () => archives,
+		setView: (v) => { viewMode = v; resultsContainer.classList.toggle('grid', viewMode === 'grid'); resultsContainer.classList.toggle('list', viewMode === 'list'); }
 	};
 
 })();
