@@ -278,7 +278,7 @@
 	// checkbox helper
 	function createCheckbox(id, labelText, checked) {
 		const idAttr = 'meta-' + id;
-		const wrapper = create('label', {class: 'meta-option', for: idAttr});
+		const wrapper = create('label', {class: 'meta-option', for: idAttr, 'data-type': id});
 		const chk = create('input', {type: 'checkbox', id: idAttr});
 		if (checked) chk.checked = true;
 		wrapper.appendChild(chk);
@@ -286,13 +286,25 @@
 		return {wrapper, chk};
 	}
 
-	// default enabled metadata (Notes and Source removed from menu)
-	const enabledMetadata = new Set(['year','division','level']);
+	// default enabled metadata (Notes removed). Load persisted selection from localStorage when available.
+	let enabledMetadata;
+	try {
+		const saved = localStorage.getItem('scioly_enabled_metadata');
+		if (saved) {
+			const arr = JSON.parse(saved);
+			enabledMetadata = new Set(Array.isArray(arr) ? arr : ['year','division','level']);
+		} else {
+			enabledMetadata = new Set(['year','division','level']);
+		}
+	} catch (e) {
+		enabledMetadata = new Set(['year','division','level']);
+	}
 
-	// build panel content - only year/division/level options
-	const cbYear = createCheckbox('year', 'Year', true);
-	const cbDivision = createCheckbox('division', 'Division', true);
-	const cbLevel = createCheckbox('level', 'Level', true);
+	// build panel content - year/division/level + source option
+	const cbYear = createCheckbox('year', 'Year', enabledMetadata.has('year'));
+	const cbDivision = createCheckbox('division', 'Division', enabledMetadata.has('division'));
+	const cbLevel = createCheckbox('level', 'Level', enabledMetadata.has('level'));
+	const cbSource = createCheckbox('source', 'Source', enabledMetadata.has('source'));
 
 	// quick buttons
 	const metaAll = create('button', {type: 'button', class: 'control-btn'}, 'All');
@@ -301,7 +313,14 @@
 	metadataPanel.appendChild(cbYear.wrapper);
 	metadataPanel.appendChild(cbDivision.wrapper);
 	metadataPanel.appendChild(cbLevel.wrapper);
+	metadataPanel.appendChild(cbSource.wrapper);
 	metadataPanel.appendChild(create('div', {style: 'margin-top:8px; display:flex; gap:8px;'}, metaAll, metaNone));
+
+	// reflect initial checked state visually on wrappers
+	cbYear.wrapper.classList.toggle('meta-checked', cbYear.chk.checked);
+	cbDivision.wrapper.classList.toggle('meta-checked', cbDivision.chk.checked);
+	cbLevel.wrapper.classList.toggle('meta-checked', cbLevel.chk.checked);
+	cbSource.wrapper.classList.toggle('meta-checked', cbSource.chk.checked);
 
 	// place panel on the document body and position it next to the button when opened
 	document.body.appendChild(metadataPanel);
@@ -312,9 +331,20 @@
 		if (cbYear.chk.checked) enabledMetadata.add('year');
 		if (cbDivision.chk.checked) enabledMetadata.add('division');
 		if (cbLevel.chk.checked) enabledMetadata.add('level');
+		if (cbSource.chk.checked) enabledMetadata.add('source');
+
+		// update visual state
+		cbYear.wrapper.classList.toggle('meta-checked', cbYear.chk.checked);
+		cbDivision.wrapper.classList.toggle('meta-checked', cbDivision.chk.checked);
+		cbLevel.wrapper.classList.toggle('meta-checked', cbLevel.chk.checked);
+		cbSource.wrapper.classList.toggle('meta-checked', cbSource.chk.checked);
+
+		// persist selection to localStorage
+		try { localStorage.setItem('scioly_enabled_metadata', JSON.stringify(Array.from(enabledMetadata))); } catch (e) {}
+
 		render();
 	}
-	[cbYear.chk, cbDivision.chk, cbLevel.chk].forEach(input => input.addEventListener('change', updateEnabledFromCheckboxes));
+	[cbYear.chk, cbDivision.chk, cbLevel.chk, cbSource.chk].forEach(input => input.addEventListener('change', updateEnabledFromCheckboxes));
 	metaAll.addEventListener('click', () => { cbYear.chk.checked = cbDivision.chk.checked = cbLevel.chk.checked = true; updateEnabledFromCheckboxes(); });
 	metaNone.addEventListener('click', () => { cbYear.chk.checked = cbDivision.chk.checked = cbLevel.chk.checked = false; updateEnabledFromCheckboxes(); });
 
@@ -535,6 +565,14 @@
 			const yr = getField(item, 'Year', 'year', 'Year(s)');
 			const lvl = getField(item, 'Level', 'level');
 			const div = getField(item, 'Division', 'division');
+
+
+			// show source first (if enabled) and render as a unified source meta-bubble
+			if ((typeof enabledMetadata === 'undefined' || enabledMetadata.has('source')) && src) {
+				const srcLabel = src === 'archive' ? 'Archive' : 'Collection';
+				// render a unified source bubble without per-source CSS classes
+				meta.appendChild(create('span', {class: 'meta-bubble source-bubble', 'data-type': 'source'}, srcLabel));
+			}
 
 			if ((typeof enabledMetadata === 'undefined' || enabledMetadata.has('year')) && yr != null && String(yr).trim() !== '') meta.appendChild(create('span', {class: 'meta-bubble', 'data-type': 'year'}, String(yr)));
 			if ((typeof enabledMetadata === 'undefined' || enabledMetadata.has('division')) && div != null && String(div).trim() !== '') meta.appendChild(create('span', {class: 'meta-bubble', 'data-type': 'division'}, String(div)));
