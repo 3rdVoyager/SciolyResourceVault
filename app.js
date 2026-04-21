@@ -218,9 +218,9 @@
 				return Array.from(set).sort();
 			}
 
-			function fillSelect(selectEl, values) {
+			function fillSelect(selectEl, values, placeholder) {
 				selectEl.innerHTML = '';
-				selectEl.appendChild(create('option', {value: ''}, 'All'));
+				selectEl.appendChild(create('option', {value: ''}, placeholder || 'All'));
 				values.forEach(v => selectEl.appendChild(create('option', {value: v}, v)));
 			}
 
@@ -237,8 +237,8 @@
 				});
 			}
 
-			fillSelect(yearSelect, uniqueSeasons());
-			fillSelect(divisionSelect, uniqueValues('Division'));
+			fillSelect(yearSelect, uniqueSeasons(), 'Select year');
+			fillSelect(divisionSelect, uniqueValues('Division'), 'Select division');
 		}
 	}
 
@@ -269,14 +269,10 @@
 	});
 
 	// Dropdown filters: we'll create selects for year and division.
-	// These are populated after the data is loaded.
-	const yearSelect = create('select', {class: 'filter', 'data-filter': 'year'});
-	const divisionSelect = create('select', {class: 'filter', 'data-filter': 'division'});
-
-	// Put a small label before selects for clarity (screen-reader friendly)
-	const yearLabel = create('label', {}, 'Year:');
-	// (source dropdown removed because most links are drives)
-	const divisionLabel = create('label', {}, 'Division:');
+	// These are populated after the data is loaded. We'll use an inline
+	// placeholder option so the prompt appears inside the select itself.
+	const yearSelect = create('select', {class: 'filter', 'data-filter': 'year', 'aria-label': 'Filter by year'});
+	const divisionSelect = create('select', {class: 'filter', 'data-filter': 'division', 'aria-label': 'Filter by division'});
 
 	// Toggle button to switch between grid and list
 	const toggleBtn = create('button', {type: 'button', class: 'view-toggle'}, 'Switch to list');
@@ -293,8 +289,6 @@
 
 	// Search scope select (collections / archives / both)
 	const scopeSelect = create('select', {id: 'scope-select', class: 'filter scope-select', 'aria-label': 'Search scope'});
-	// Label for the scope select
-	const scopeLabel = create('label', {for: 'scope-select', class: 'scope-label'}, 'Type:');
 	scopeSelect.appendChild(create('option', {value: 'collections', selected: true}, 'Tournament Collections'));
 	scopeSelect.appendChild(create('option', {value: 'archives'}, 'Web Archives'));
 	scopeSelect.appendChild(create('option', {value: 'both'}, 'Both'));
@@ -303,13 +297,9 @@
 		updateResourcesForScope();
 		render();
 	});
-	controls.appendChild(scopeLabel);
 	controls.appendChild(scopeSelect);
-
-	// Then the dropdown filters (will contain an "All" option + data-driven options)
-	controls.appendChild(yearLabel);
+	// Then the dropdown filters (will contain a prompt option + data-driven options)
 	controls.appendChild(yearSelect);
-	controls.appendChild(divisionLabel);
 	controls.appendChild(divisionSelect);
 
 	// View toggle and metadata button (metadata panel will be shown when the button is toggled)
@@ -500,7 +490,7 @@
 	// 1) Toggle to open resource links in a new tab (persisted)
 	// 2) Reset saved session button to clear common localStorage keys
 	(function addSitewideSettings() {
-		const openLinksBtn = create('button', {type: 'button', id: 'open-links-toggle', 'aria-pressed': 'true', class: 'toggle-btn'}, 'Open resource links in new tab');
+		const openLinksBtn = create('button', {type: 'button', id: 'open-links-toggle', 'aria-pressed': 'true', class: 'toggle-btn'}, 'Open links in new tab');
 		const resetBtn = create('button', {type: 'button', id: 'reset-saved-session', class: 'control-btn danger'}, 'Reset saved session');
 		const wrapper = create('div', {class: 'setting-row'}, openLinksBtn, resetBtn);
 		settingsPanel.appendChild(wrapper);
@@ -510,15 +500,22 @@
 			const saved = localStorage.getItem('scioly_open_new_tab');
 			const openNew = saved === null ? true : saved === 'true';
 			openLinksBtn.setAttribute('aria-pressed', String(openNew));
-			openLinksBtn.classList.toggle('on', openNew);
-		} catch (e) { openLinksBtn.setAttribute('aria-pressed', 'true'); openLinksBtn.classList.add('on'); }
+			// update visible label instead of using a highlight class
+			openLinksBtn.textContent = openNew ? 'Open links in new tab' : 'Open links in this tab';
+		} catch (e) {
+			openLinksBtn.setAttribute('aria-pressed', 'true');
+			openLinksBtn.textContent = 'Open links in new tab';
+		}
 
 		openLinksBtn.addEventListener('click', () => {
 			const cur = openLinksBtn.getAttribute('aria-pressed') === 'true';
 			const next = !cur;
 			openLinksBtn.setAttribute('aria-pressed', String(next));
-			openLinksBtn.classList.toggle('on', next);
+			// switch label to reflect behavior
+			openLinksBtn.textContent = next ? 'Open links in new tab' : 'Open links in this tab';
 			try { localStorage.setItem('scioly_open_new_tab', next ? 'true' : 'false'); } catch (e) {}
+			// re-render so existing anchors get updated target/rel attributes
+			try { render(); } catch (e) { /* ignore if render not available yet */ }
 		});
 
 		resetBtn.addEventListener('click', () => {
