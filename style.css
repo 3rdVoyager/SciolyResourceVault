@@ -275,8 +275,108 @@ body.dark .sidebar-toggle { color: var(--text); border-color: var(--border); bac
 /* Settings panel (dropdown) */
 .settings-btn { background: transparent; }
 .settings-panel { position:absolute; top:calc(100% + 8px); right:12px; margin-top:0; min-width:200px; background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:10px; box-shadow:0 8px 24px rgba(2,6,23,0.12); z-index:200; display:none; }
-.settings-panel[aria-hidden="false"] { display:block; }
-.settings-panel .theme-toggle { margin:0; }
+.settings-panel[aria-hidden="false"] { display:flex; flex-direction:column; align-items:center; gap:6px; }
+.settings-panel .theme-toggle { margin:0; width:100%; box-sizing:border-box; max-width:320px; }
+
+/* Make theme toggle and reset button share a compact, outlined style */
+.settings-panel .theme-toggle,
+.settings-panel #reset-saved-session,
+.settings-panel #open-links-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text);
+    cursor: pointer;
+    font-weight: 600;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+    width:100%;
+    max-width:320px;
+    justify-content:flex-start;
+}
+
+/* Ensure all settings buttons use the same typography and sizing */
+.settings-panel .theme-toggle,
+.settings-panel #reset-saved-session,
+.settings-panel #open-links-toggle {
+    font-size: 0.95rem;
+    line-height: 1.2;
+    min-height: 44px;
+}
+.settings-panel .theme-toggle:hover,
+.settings-panel #reset-saved-session:hover,
+.settings-panel #open-links-toggle:hover {
+    background: rgba(3,102,214,0.04);
+    border-color: rgba(3,102,214,0.08);
+}
+.settings-panel .theme-toggle:focus,
+.settings-panel #reset-saved-session:focus,
+.settings-panel #open-links-toggle:focus {
+    outline: 3px solid rgba(3,102,214,0.14);
+    outline-offset: 2px;
+}
+
+/* Visual state for the toggle when ON */
+.settings-panel #open-links-toggle.on { background: rgba(3,102,214,0.08); border-color: rgba(3,102,214,0.16); }
+
+/* Compact menu styling for site-wide settings row (checkbox + reset) */
+.settings-panel .setting-row {
+    display:flex;
+    flex-direction:column; /* stack into a single column */
+    align-items:stretch;
+    gap:6px;
+    padding:0 8px;
+    border-radius:6px;
+    margin-top:0; /* remove extra gap between theme toggle and setting row */
+    width:100%;
+    max-width:320px;
+}
+.settings-panel .setting-row .setting-label { font-size:0.95rem; color:var(--muted); margin-left:6px; display:inline-flex; align-items:center; gap:8px; }
+.settings-panel .setting-row input[type="checkbox"] { transform:scale(1.0); margin-right:6px; }
+.settings-panel #reset-saved-session { padding:8px 10px; font-size:0.92rem; border-radius:6px; align-self:stretch; width:100%; }
+.settings-panel .setting-row:hover { background: rgba(3,102,214,0.02); }
+
+/* Ensure buttons inside the setting row align as a single column and look consistent */
+.settings-panel .setting-row button,
+.settings-panel .setting-row .theme-toggle,
+.settings-panel .setting-row #open-links-toggle,
+.settings-panel .setting-row #reset-saved-session {
+    width: 100%;
+    justify-content: flex-start;
+    text-align: left;
+    padding: 10px 12px;
+}
+
+/* Ensure the main theme toggle matches the setting-row buttons so all align */
+.settings-panel .theme-toggle {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    justify-content: flex-start;
+    text-align: left;
+    min-height: 44px;
+    margin: 0;
+
+}
+
+/* Ensure buttons in the settings panel use consistent box-sizing, border, and sizing */
+.settings-panel .setting-row button,
+.settings-panel .setting-row .theme-toggle,
+.settings-panel .setting-row #open-links-toggle,
+.settings-panel .setting-row #reset-saved-session,
+.settings-panel .theme-toggle {
+    box-sizing: border-box;
+    border-width: 1px;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+}
+
+@media (min-width:421px) {
+    /* on wider viewports keep compact single-column but limit the max width */
+    .settings-panel .setting-row { max-width:320px; }
+}
 
 /* Metadata panel reuses settings-panel styling; small tweaks */
 .metadata-panel { min-width:180px; max-width:calc(100vw - 32px); width:auto; padding:8px; display:none; }
@@ -322,9 +422,42 @@ body.dark .metadata-panel .control-btn.quick:hover { background: rgba(255,255,25
 .metadata-panel .meta-option:focus-within { outline: 3px solid rgba(3,102,214,0.12); outline-offset: 2px; }
 
 /* Restyle settings toggle: show gear icon and caret, with clear hover/focus states */
-.settings-btn { display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:8px; background:transparent; border:1px solid var(--border); color:var(--text); cursor:pointer; font-weight:600; }
-.settings-btn::before { content: '⚙'; display:inline-block; line-height:1; font-size:1.05rem; }
-.settings-btn::after { content: '▾'; display:inline-block; margin-left:4px; font-size:0.85rem; transition: transform 160ms ease; color:var(--muted); }
+.site-header .settings-btn {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+    line-height: 1;
+    margin-left: auto;
+    box-sizing: border-box;
+}
+.site-header .settings-btn::before {
+    content: '⚙';
+    display: inline-block;
+    line-height: 1;
+    font-size: 1.05rem;
+}
+.site-header .settings-btn::after {
+    content: '▾';
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 0.85rem;
+    transition: transform 160ms ease;
+    color: var(--muted);
+}
+
+/* Remove any default focus ring and use our custom outline */
+.site-header .settings-btn:focus { outline: none; box-shadow: 0 0 0 3px rgba(3,102,214,0.12); }
 .settings-btn[aria-expanded="true"]::after { transform: rotate(180deg); color:var(--text); }
 .settings-btn:hover { background: rgba(3,102,214,0.04); border-color: rgba(3,102,214,0.12); }
 .settings-btn:focus { outline:3px solid rgba(3,102,214,0.14); outline-offset:2px; }

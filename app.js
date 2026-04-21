@@ -496,6 +496,47 @@
 		controls.appendChild(settingsPanel);
 	}
 
+	// Add site-wide settings controls into the settings panel:
+	// 1) Toggle to open resource links in a new tab (persisted)
+	// 2) Reset saved session button to clear common localStorage keys
+	(function addSitewideSettings() {
+		const openLinksBtn = create('button', {type: 'button', id: 'open-links-toggle', 'aria-pressed': 'true', class: 'toggle-btn'}, 'Open resource links in new tab');
+		const resetBtn = create('button', {type: 'button', id: 'reset-saved-session', class: 'control-btn danger'}, 'Reset saved session');
+		const wrapper = create('div', {class: 'setting-row'}, openLinksBtn, resetBtn);
+		settingsPanel.appendChild(wrapper);
+
+		// initialize toggle state from localStorage (default: true)
+		try {
+			const saved = localStorage.getItem('scioly_open_new_tab');
+			const openNew = saved === null ? true : saved === 'true';
+			openLinksBtn.setAttribute('aria-pressed', String(openNew));
+			openLinksBtn.classList.toggle('on', openNew);
+		} catch (e) { openLinksBtn.setAttribute('aria-pressed', 'true'); openLinksBtn.classList.add('on'); }
+
+		openLinksBtn.addEventListener('click', () => {
+			const cur = openLinksBtn.getAttribute('aria-pressed') === 'true';
+			const next = !cur;
+			openLinksBtn.setAttribute('aria-pressed', String(next));
+			openLinksBtn.classList.toggle('on', next);
+			try { localStorage.setItem('scioly_open_new_tab', next ? 'true' : 'false'); } catch (e) {}
+		});
+
+		resetBtn.addEventListener('click', () => {
+			if (!confirm('Reset saved session? This will clear saved settings and presets for this site.')) return;
+			const keysToClear = [
+				'scioly_enabled_metadata',
+				'scioly_theme',
+				'scioly_grid_size',
+				'scioly_sort',
+				'scioly_open_new_tab',
+				'scioly_restore_filters',
+				'scioly_filter_presets'
+			];
+			try { keysToClear.forEach(k => localStorage.removeItem(k)); } catch (e) {}
+			location.reload();
+		});
+	})();
+
 	// Sidebar toggle wiring: open/close left slide-out and overlay
 	const sidebarToggle = document.getElementById('sidebar-toggle');
 	const sidebar = document.getElementById('sidebar');
@@ -625,7 +666,12 @@
 			) || '(no title)';
 			// Link field in the CSV is 'Link'
 			const linkHref = getField(item, 'Link', 'link_url') || '#';
-			const title = create('a', {class: 'title', href: linkHref, target: '_blank', rel: 'noopener noreferrer'}, titleText);
+			// Respect the site-wide setting `scioly_open_new_tab` (default: true).
+			const openNew = (function(){ try { const v = localStorage.getItem('scioly_open_new_tab'); return v === null ? true : v === 'true'; } catch (e) { return true; } })();
+			const titleAttrs = {class: 'title', href: linkHref};
+			if (openNew) { titleAttrs.target = '_blank'; titleAttrs.rel = 'noopener noreferrer'; }
+			else { titleAttrs.target = '_self'; }
+			const title = create('a', titleAttrs, titleText);
 			card.appendChild(title);
 
 			// Meta: show selected metadata bubbles (year/division/level)
