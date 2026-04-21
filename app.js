@@ -105,6 +105,37 @@
 		return '';
 	}
 
+		// Helpers to parse years and derive season labels (e.g. "2025-2026").
+		function extractYearsFromString(s) {
+			if (!s) return [];
+			const str = String(s);
+			const years = new Set();
+			// capture ranges like "2019-2021" or with en/em dash
+			const rangeRe = /\b(20\d{2})\s*[–-]\s*(20\d{2})\b/g;
+			let m;
+			while ((m = rangeRe.exec(str)) !== null) {
+				const start = parseInt(m[1], 10);
+				const end = parseInt(m[2], 10);
+				if (!Number.isNaN(start) && !Number.isNaN(end)) {
+					for (let y = start; y <= end; y++) years.add(y);
+				}
+			}
+			// capture individual years
+			const yearRe = /\b(20\d{2})\b/g;
+			while ((m = yearRe.exec(str)) !== null) years.add(parseInt(m[1], 10));
+			return Array.from(years).sort((a, b) => a - b);
+		}
+
+		function seasonsFromYears(years) {
+			return years.map(y => `${y}-${y + 1}`);
+		}
+
+		function getItemSeasons(item) {
+			const raw = getField(item, 'Year', 'year', 'Year(s)') || '';
+			const years = extractYearsFromString(raw);
+			return seasonsFromYears(years);
+		}
+
 	// ----- Search logic (case-insensitive) -----
 	// This function decides whether a single resource item matches the
 	// current search query. It is intentionally simple: it concatenates the
@@ -193,7 +224,20 @@
 				values.forEach(v => selectEl.appendChild(create('option', {value: v}, v)));
 			}
 
-			fillSelect(yearSelect, uniqueValues('Year'));
+			function uniqueSeasons() {
+				const seasons = new Set();
+				data.forEach(item => {
+					getItemSeasons(item).forEach(season => seasons.add(season));
+				});
+				return Array.from(seasons).sort((a, b) => {
+					// sort by start year descending (newest first)
+					const aStart = parseInt(a.split('-')[0], 10) || 0;
+					const bStart = parseInt(b.split('-')[0], 10) || 0;
+					return bStart - aStart;
+				});
+			}
+
+			fillSelect(yearSelect, uniqueSeasons());
 			fillSelect(divisionSelect, uniqueValues('Division'));
 		}
 	}
@@ -547,9 +591,9 @@
 		const matched = resources.filter(item => {
 			// First check dropdown filters: if a filter has a selected value,
 			// require the item's corresponding field to equal that value.
-				const itemYear = String(getField(item, 'Year', 'year', 'Year(s)') || '');
-			const itemDivision = String(getField(item, 'Division', 'division') || '');
-			if (yearFilter && itemYear !== yearFilter) return false;
+				const itemSeasons = getItemSeasons(item);
+				const itemDivision = String(getField(item, 'Division', 'division') || '');
+				if (yearFilter && !itemSeasons.includes(yearFilter)) return false;
 			if (divisionFilter && itemDivision !== divisionFilter) return false;
 
 			// Then apply the general text search
