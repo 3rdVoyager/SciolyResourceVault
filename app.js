@@ -308,9 +308,10 @@
 	controls.appendChild(divisionSelect);
 
 	// View toggle and metadata button (metadata panel will be shown when the button is toggled)
+	// Insert a flexible spacer before the toggles so they are pushed to the right.
+	controls.appendChild(create('span', {class: 'spacer'}));
 	controls.appendChild(viewToggleBtn);
 	controls.appendChild(metadataToggleBtn);
-	controls.appendChild(create('span', {class: 'spacer'}));
 	root.appendChild(controls);
 	// Metadata panel (popover) - appended to page header or controls below
 	const metadataPanel = create('div', {class: 'settings-panel metadata-panel', 'aria-hidden': 'true', id: 'metadata-panel'});
