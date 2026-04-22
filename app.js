@@ -1,19 +1,17 @@
 
-/*
-	Scioly Resource Vault - Minimal Plain JavaScript App
+	/*
+		Scioly Resource Vault - Minimal Plain JavaScript App
 
-	- Loads a local JSON file `resources.json` (array of objects)
-	- Provides a case-insensitive search using Array.prototype.filter()
-	- Displays results in a toggleable grid or list view
-	- Links open in a new tab using target="_blank" and rel="noopener noreferrer"
+		- Loads two local JSON files: `external_test_collections.json` and `external_test_archives.json`
+		- Provides a case-insensitive search using Array.prototype.filter()
+		- Displays results in a toggleable grid or list view
+		- Site-wide settings (theme, open-links toggle) persisted in localStorage
 
-	Edit points:
-	- `DATA_URL` if you move the JSON file
-	- which fields are searched: change `matches()` to include/exclude fields
-	- CSS in `style.css` to change the appearance
-
-	This file is intentionally commented heavily so you can understand and edit it.
-*/
+		Edit points:
+		- Change `COLLECTIONS_URL` / `ARCHIVES_URL` at the top if you move the files
+		- To change searchable fields, edit `matches()`
+		- Styling is in `style.css`
+	*/
 
 (function () {
 	// ----- Configuration -----
@@ -33,8 +31,6 @@
 	let query = '';
 	// `viewMode` controls layout: 'grid' or 'list'
 	let viewMode = 'grid';
-	// `compact` hides secondary metadata when true
-	let compact = false;
 
 	// searchScope controls which fields are searched:
 	// 'collections' = tournament collections, 'archives' = web archives
@@ -62,12 +58,12 @@
 
 	// After render: compute the widest `.meta-bubble` and set CSS variable
 	// so all bubbles have a uniform minimum width matching the widest bubble.
-	let _bubbleResizeTimer = null;
+	let bubbleResizeTimer = null;
 
 	function adjustBubbleMinWidth() {
 		// debounce
-		if (_bubbleResizeTimer) clearTimeout(_bubbleResizeTimer);
-		_bubbleResizeTimer = setTimeout(() => {
+		if (bubbleResizeTimer) clearTimeout(bubbleResizeTimer);
+		bubbleResizeTimer = setTimeout(() => {
 			const bubbles = resultsContainer.querySelectorAll('.meta-bubble');
 			// compute max width per data-type
 			const maxByType = {};
@@ -83,8 +79,7 @@
 				const px = Math.ceil(maxByType[type] + 0);
 				resultsContainer.style.setProperty('--meta-bubble-min-' + type, px + 'px');
 			}
-			// debug: log computed widths for inspection
-			try { console.debug('meta-bubble widths', maxByType); } catch (e) {}
+			// debug: may log computed widths during development; removed in clean build
 		}, 60);
 	}
 
@@ -134,6 +129,16 @@
 			const raw = getField(item, 'Year', 'year', 'Year(s)') || '';
 			const years = extractYearsFromString(raw);
 			return seasonsFromYears(years);
+		}
+
+		// Helper to read the 'open links in new tab' setting from localStorage
+		function getOpenLinksSetting() {
+			try {
+				const v = localStorage.getItem('scioly_open_new_tab');
+				return v === null ? true : v === 'true';
+			} catch (e) {
+				return true;
+			}
 		}
 
 	// ----- Search logic (case-insensitive) -----
@@ -258,11 +263,11 @@
 		return;
 	}
 
-	// Controls container (search box, dropdown filters, view toggle, compact checkbox)
+	// Controls container (search box, dropdown filters, view toggle)
 	const controls = create('div', {class: 'controls'});
 
 	// Search input: user types here to filter resources (general text search)
-	const input = create('input', {
+	const searchInput = create('input', {
 		type: 'search',
 		placeholder: 'Search (any field)...',
 		'aria-label': 'Search resources'
@@ -275,17 +280,17 @@
 	const divisionSelect = create('select', {class: 'filter', 'data-filter': 'division', 'aria-label': 'Filter by division'});
 
 	// Toggle button to switch between grid and list
-	const toggleBtn = create('button', {type: 'button', class: 'view-toggle'}, 'Switch to list');
+	const viewToggleBtn = create('button', {type: 'button', class: 'view-toggle'}, 'Switch to list');
 
 	// Metadata selection: users can choose which metadata bubbles to show
-	const metadataBtn = create('button', {type: 'button', class: 'control-btn metadata-btn', 'aria-expanded': 'false'}, 'Metadata');
+	const metadataToggleBtn = create('button', {type: 'button', class: 'control-btn metadata-btn', 'aria-expanded': 'false'}, 'Metadata');
 
 	// Results container - we toggle class 'grid' / 'list' on this element
 	const resultsContainer = create('div', {class: 'results grid'});
 
 	// Append controls and results to the root element
 	// Append controls: search box first
-	controls.appendChild(input);
+	controls.appendChild(searchInput);
 
 	// Search scope select (collections / archives / both)
 	const scopeSelect = create('select', {id: 'scope-select', class: 'filter scope-select', 'aria-label': 'Search scope'});
@@ -303,8 +308,8 @@
 	controls.appendChild(divisionSelect);
 
 	// View toggle and metadata button (metadata panel will be shown when the button is toggled)
-	controls.appendChild(toggleBtn);
-	controls.appendChild(metadataBtn);
+	controls.appendChild(viewToggleBtn);
+	controls.appendChild(metadataToggleBtn);
 	controls.appendChild(create('span', {class: 'spacer'}));
 	root.appendChild(controls);
 	// Metadata panel (popover) - appended to page header or controls below
@@ -383,17 +388,17 @@
 		metaAll.addEventListener('click', () => { cbYear.chk.checked = cbDivision.chk.checked = cbLevel.chk.checked = cbSource.chk.checked = true; updateEnabledFromCheckboxes(); });
 		metaNone.addEventListener('click', () => { cbYear.chk.checked = cbDivision.chk.checked = cbLevel.chk.checked = cbSource.chk.checked = false; updateEnabledFromCheckboxes(); });
 
-	metadataBtn.addEventListener('click', (e) => {
-		const expanded = metadataBtn.getAttribute('aria-expanded') === 'true';
+	metadataToggleBtn.addEventListener('click', (e) => {
+		const expanded = metadataToggleBtn.getAttribute('aria-expanded') === 'true';
 		if (expanded) {
-			metadataBtn.setAttribute('aria-expanded', 'false');
+			metadataToggleBtn.setAttribute('aria-expanded', 'false');
 			metadataPanel.setAttribute('aria-hidden', 'true');
 		} else {
 			// position the panel under the button using viewport coordinates
-			const rect = metadataBtn.getBoundingClientRect();
+			const rect = metadataToggleBtn.getBoundingClientRect();
 			metadataPanel.style.position = 'absolute';
 			// make visible first so we can measure its width, then choose alignment
-			metadataBtn.setAttribute('aria-expanded', 'true');
+			metadataToggleBtn.setAttribute('aria-expanded', 'true');
 			metadataPanel.setAttribute('aria-hidden', 'false');
 			requestAnimationFrame(() => {
 				// ensure any CSS 'right' from .settings-panel doesn't constrain us
@@ -448,8 +453,8 @@
 	// ----- Event listeners -----
 	// Input: re-render on each keystroke. For large datasets you might
 	// want to debounce this input (not done here for simplicity).
-	input.addEventListener('input', () => {
-		query = input.value.trim();
+	searchInput.addEventListener('input', () => {
+		query = searchInput.value.trim();
 		render();
 	});
 
@@ -459,12 +464,12 @@
 		select.addEventListener('change', () => render());
 	});
 
-	// Toggle between grid and list views (preserve other classes like 'compact')
-	toggleBtn.addEventListener('click', () => {
+	// Toggle between grid and list views
+	viewToggleBtn.addEventListener('click', () => {
 		viewMode = viewMode === 'grid' ? 'list' : 'grid';
 		resultsContainer.classList.toggle('list', viewMode === 'list');
 		resultsContainer.classList.toggle('grid', viewMode === 'grid');
-		toggleBtn.textContent = viewMode === 'grid' ? 'Switch to list' : 'Switch to grid';
+		viewToggleBtn.textContent = viewMode === 'grid' ? 'Switch to list' : 'Switch to grid';
 	});
 
 	// Theme toggle: create a button and wire localStorage + prefers-color-scheme
@@ -490,35 +495,34 @@
 	// 1) Toggle to open resource links in a new tab (persisted)
 	// 2) Reset saved session button to clear common localStorage keys
 	(function addSitewideSettings() {
-		const openLinksBtn = create('button', {type: 'button', id: 'open-links-toggle', 'aria-pressed': 'true', class: 'toggle-btn'}, 'Open links in new tab');
-		const resetBtn = create('button', {type: 'button', id: 'reset-saved-session', class: 'control-btn danger'}, 'Reset saved session');
-		const wrapper = create('div', {class: 'setting-row'}, openLinksBtn, resetBtn);
-		settingsPanel.appendChild(wrapper);
+		const openLinksToggleBtn = create('button', {type: 'button', id: 'open-links-toggle', 'aria-pressed': 'true', class: 'toggle-btn'}, 'Open links in new tab');
+		const resetSavedSessionBtn = create('button', {type: 'button', id: 'reset-saved-session', class: 'control-btn danger'}, 'Reset saved session');
+		const settingsRow = create('div', {class: 'setting-row'}, openLinksToggleBtn, resetSavedSessionBtn);
+		settingsPanel.appendChild(settingsRow);
 
 		// initialize toggle state from localStorage (default: true)
 		try {
-			const saved = localStorage.getItem('scioly_open_new_tab');
-			const openNew = saved === null ? true : saved === 'true';
-			openLinksBtn.setAttribute('aria-pressed', String(openNew));
+			const openNew = getOpenLinksSetting();
+			openLinksToggleBtn.setAttribute('aria-pressed', String(openNew));
 			// update visible label instead of using a highlight class
-			openLinksBtn.textContent = openNew ? 'Open links in new tab' : 'Open links in this tab';
+			openLinksToggleBtn.textContent = openNew ? 'Open links in new tab' : 'Open links in this tab';
 		} catch (e) {
-			openLinksBtn.setAttribute('aria-pressed', 'true');
-			openLinksBtn.textContent = 'Open links in new tab';
+			openLinksToggleBtn.setAttribute('aria-pressed', 'true');
+			openLinksToggleBtn.textContent = 'Open links in new tab';
 		}
 
-		openLinksBtn.addEventListener('click', () => {
-			const cur = openLinksBtn.getAttribute('aria-pressed') === 'true';
+		openLinksToggleBtn.addEventListener('click', () => {
+			const cur = openLinksToggleBtn.getAttribute('aria-pressed') === 'true';
 			const next = !cur;
-			openLinksBtn.setAttribute('aria-pressed', String(next));
+			openLinksToggleBtn.setAttribute('aria-pressed', String(next));
 			// switch label to reflect behavior
-			openLinksBtn.textContent = next ? 'Open links in new tab' : 'Open links in this tab';
+			openLinksToggleBtn.textContent = next ? 'Open links in new tab' : 'Open links in this tab';
 			try { localStorage.setItem('scioly_open_new_tab', next ? 'true' : 'false'); } catch (e) {}
 			// re-render so existing anchors get updated target/rel attributes
 			try { render(); } catch (e) { /* ignore if render not available yet */ }
 		});
 
-		resetBtn.addEventListener('click', () => {
+		resetSavedSessionBtn.addEventListener('click', () => {
 			if (!confirm('Reset saved session? This will clear saved settings and presets for this site.')) return;
 			const keysToClear = [
 				'scioly_enabled_metadata',
@@ -597,8 +601,8 @@
 			settingsBtn.setAttribute('aria-expanded', 'false');
 			settingsPanel.setAttribute('aria-hidden', 'true');
 		}
-		if (typeof metadataPanel !== 'undefined' && !metadataPanel.contains(target) && !metadataBtn.contains(target)) {
-			metadataBtn.setAttribute('aria-expanded', 'false');
+		if (typeof metadataPanel !== 'undefined' && !metadataPanel.contains(target) && !metadataToggleBtn.contains(target)) {
+			metadataToggleBtn.setAttribute('aria-expanded', 'false');
 			metadataPanel.setAttribute('aria-hidden', 'true');
 		}
 	});
@@ -607,7 +611,7 @@
 			settingsBtn.setAttribute('aria-expanded', 'false');
 			settingsPanel.setAttribute('aria-hidden', 'true');
 			if (typeof metadataPanel !== 'undefined') {
-				metadataBtn.setAttribute('aria-expanded', 'false');
+				metadataToggleBtn.setAttribute('aria-expanded', 'false');
 				metadataPanel.setAttribute('aria-hidden', 'true');
 			}
 		}
@@ -664,7 +668,7 @@
 			// Link field in the CSV is 'Link'
 			const linkHref = getField(item, 'Link', 'link_url') || '#';
 			// Respect the site-wide setting `scioly_open_new_tab` (default: true).
-			const openNew = (function(){ try { const v = localStorage.getItem('scioly_open_new_tab'); return v === null ? true : v === 'true'; } catch (e) { return true; } })();
+			const openNew = getOpenLinksSetting();
 			const titleAttrs = {class: 'title', href: linkHref};
 			if (openNew) { titleAttrs.target = '_blank'; titleAttrs.rel = 'noopener noreferrer'; }
 			else { titleAttrs.target = '_self'; }

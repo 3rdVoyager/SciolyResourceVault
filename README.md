@@ -5,7 +5,7 @@ A study tool created by students, for students with the purpose of organizing pu
 ## Quick start
 
 - Open Github pages at: <https://3rdvoyager.github.io/SciolyResourceVault/>
-- Or open `index.html` in a browser. The app reads `resources.json` (local) and provides filters and search.
+-- Or open `index.html` in a browser. The app reads two local JSON files (`external_test_collections.json` and `external_test_archives.json`) and provides filters and search.
 
 ## Future Updates
 
@@ -17,8 +17,8 @@ A study tool created by students, for students with the purpose of organizing pu
 
 - `index.html` — main page
 - `style.css` — styles
-- `app.js` — minimal JS app: loads `resources.json`, filters, and renders results
-- `resources.json` — local JSON database (array of resource objects). Will likely be removed after transition to cloud hosted database.
+- `app.js` — minimal JS app: loads `external_test_collections.json` and `external_test_archives.json`, filters, and renders results
+*Note:* This project currently uses the two JSON files listed above as its data sources.
 - `CHANGELOG.md` — project changelog
 
 All links open in a new tab (`target="_blank"`) for safety. The site acts as a directory and does not host files.
