@@ -8,6 +8,9 @@ body {
 
 #app { width: 100%; box-sizing: border-box; }
 
+/* Generic centered content container used across pages to guarantee identical widths */
+.container { max-width:1088px; margin:0 auto; padding:0 24px; box-sizing:border-box; }
+
 .controls { display:flex; gap:10px; align-items:center; margin-bottom:14px; width:100%; padding:6px 12px; box-sizing:border-box; flex-wrap:wrap; }
 .controls input[type="search"] { flex:1 1 320px; min-width:160px; padding:10px 12px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-card-bg); color:var(--color-text); box-shadow:none; }
 .controls select.filter { padding:9px 10px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-card-bg); color:var(--color-text); }
@@ -153,7 +156,7 @@ body.dark .card { box-shadow: none; }
 
 /* Footer styles */
 .site-footer { margin-top:24px; padding:14px 0; border-top:1px solid var(--color-border); color:var(--color-muted); background:transparent; font-size:0.95rem; border-radius:6px; width:100%; box-sizing:border-box; }
-.site-footer .container { width:100%; margin:0; padding:0 12px; box-sizing:border-box; }
+.site-footer .container { max-width:1088px; margin:0 auto; padding:0 24px; box-sizing:border-box; }
 .site-footer p { margin:6px 0; line-height:1.35; }
 .site-footer strong { color:var(--color-text); }
 
@@ -162,11 +165,16 @@ body.dark .card { box-shadow: none; }
 .site-footer {
     background-color: #0b0b0d;
     color: #ffffff;
-    padding: 2rem 1rem;
+    padding: 2rem 0; /* remove horizontal padding so inner container aligns with other centered content */
     margin-top: 4rem;
     text-align: left;
     font-family: sans-serif;
 }
+
+/* Home section content width and spacing */
+.home-inner { margin: 0 auto 32px; padding: 18px 24px 32px; }
+.home-inner h2 { margin-top: 0; margin-bottom: 12px; }
+.home-inner p { margin-bottom: 12px; line-height: 1.6; }
 
 /* Header / brand */
 .site-header { display:flex; align-items:center; gap:12px; margin-bottom:16px; width:100%; padding:0 12px; box-sizing:border-box; position:relative; }

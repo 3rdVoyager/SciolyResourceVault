@@ -427,29 +427,44 @@
 	// Tab handling: show/hide sections based on selected tab
 	const tabTest = document.getElementById('tab-test');
 	const tabResources = document.getElementById('tab-resources');
+	const tabHome = document.getElementById('tab-home');
 	const resourcesSection = document.getElementById('resources');
+	const homeSection = document.getElementById('home');
 
 	function showTab(tabName) {
 		if (tabName === 'test') {
-			// show app, hide resources
+			// show app, hide resources and home
 			root.classList.remove('hidden');
 			if (resourcesSection) resourcesSection.classList.add('hidden');
+			if (homeSection) homeSection.classList.add('hidden');
 			if (tabTest) tabTest.setAttribute('aria-selected', 'true');
 			if (tabResources) tabResources.setAttribute('aria-selected', 'false');
+			if (tabHome) tabHome.setAttribute('aria-selected', 'false');
 		} else if (tabName === 'resources') {
 			// hide app, show resources section
 			root.classList.add('hidden');
 			if (resourcesSection) resourcesSection.classList.remove('hidden');
+			if (homeSection) homeSection.classList.add('hidden');
 			if (tabTest) tabTest.setAttribute('aria-selected', 'false');
 			if (tabResources) tabResources.setAttribute('aria-selected', 'true');
+			if (tabHome) tabHome.setAttribute('aria-selected', 'false');
+		} else if (tabName === 'home') {
+			// hide app and resources, show home section
+			root.classList.add('hidden');
+			if (resourcesSection) resourcesSection.classList.add('hidden');
+			if (homeSection) homeSection.classList.remove('hidden');
+			if (tabTest) tabTest.setAttribute('aria-selected', 'false');
+			if (tabResources) tabResources.setAttribute('aria-selected', 'false');
+			if (tabHome) tabHome.setAttribute('aria-selected', 'true');
 		}
 	}
 
 	if (tabTest) tabTest.addEventListener('click', () => { showTab('test'); setSidebar(false); });
 	if (tabResources) tabResources.addEventListener('click', () => { showTab('resources'); setSidebar(false); });
+	if (tabHome) tabHome.addEventListener('click', () => { showTab('home'); setSidebar(false); });
 
-	// default to Test Index
-	showTab('test');
+	// default to Home
+	showTab('home');
 
 	// ----- Event listeners -----
 	// Input: re-render on each keystroke. For large datasets you might

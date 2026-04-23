@@ -21,6 +21,7 @@
 					<div class="sidebar-title">Navigation</div>
 				</div>
 				<nav class="site-tabs" role="tablist" aria-label="Main site tabs">
+					<button class="tab-btn" role="tab" aria-selected="false" data-tab="home" id="tab-home">Home</button>
 					<button class="tab-btn" role="tab" aria-selected="true" data-tab="test" id="tab-test">External Resource Index</button>
 					<button class="tab-btn" role="tab" aria-selected="false" data-tab="resources" id="tab-resources">Internal Resource Index</button>
 				</nav>
@@ -29,6 +30,16 @@
 	</header>
 	<!-- Root element for the small, plain-JS app -->
 	<div id="app"></div>
+
+	<!-- Home / About section (tab) -->
+	<section id="home" class="hidden">
+		<div class="container home-inner">
+			<h2>Welcome to the Scioly Resource Vault</h2>
+			<p>The Scioly Resource Vault is a student-run directory of Science Olympiad resources. It indexes publicly-available study materials, tournament collections, and archived web resources to make them easier to discover and browse.</p>
+			<p>Use the <strong>External Resource Index</strong> to search and filter collections by year, division, and level. Toggle between grid and list views, open links in a new tab, and control which metadata bubbles are shown via the <strong>Metadata</strong> panel.</p>
+			<p>If you own or are affiliated with any listed resources and want them removed, please use the contact/report link in the footer and include the resource URL.</p>
+		</div>
+	</section>
 
 	<!-- Resources section (hidden by default) -->
 	<section id="resources" class="hidden">
